@@ -1,11 +1,19 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, Response
 from flask_cors import CORS
 from model import parse_player_csv, final_over_probability
 import requests
-from bs4 import BeautifulSoup
-import time
+import pandas as pd
+import numpy as np
 import os
 import re
+import time
+
+try:
+    from nba_api.stats.endpoints import playergamelog
+    from nba_api.stats.static import players as nba_players_static
+    NBA_API_AVAILABLE = True
+except ImportError:
+    NBA_API_AVAILABLE = False
 
 app = Flask(__name__)
 CORS(app)
@@ -145,7 +153,9 @@ def serve_manifest():
     return send_from_directory(FRONTEND_PATH, 'manifest.json')
 
 
-
+@app.route("/logo.png")
+def serve_logo():
+    return send_from_directory(FRONTEND_PATH, 'logo.png')
 
 
 @app.route("/service-worker.js")
@@ -200,13 +210,16 @@ def search_players():
 @app.route("/fetch_player_csv", methods=["POST"])
 def fetch_player_csv():
     """
-    Scarica il game log da Basketball Reference e restituisce un CSV pulito.
+    Scarica il game log tramite nba_api (ufficiale, non bloccabile).
     Input:  {"slug": "jamesle01", "season": "2026"}
     Output: {"csv": "...", "player_name": "LeBron James", "games": 49}
     """
-    data = request.get_json()
-    slug   = data.get("slug", "").strip()
-    season = data.get("season", "2026")
+    if not NBA_API_AVAILABLE:
+        return jsonify({"error": "nba_api non installato sul server"}), 500
+
+    data       = request.get_json()
+    slug       = data.get("slug", "").strip()
+    season_end = int(data.get("season", "2025"))
 
     if not slug:
         return jsonify({"error": "Slug mancante"}), 400
@@ -215,155 +228,120 @@ def fetch_player_csv():
     if slug not in known_slugs:
         return jsonify({"error": "Giocatore non riconosciuto"}), 400
 
-    target_url = f"https://www.basketball-reference.com/players/{slug[0]}/{slug}/gamelog/{season}"
+    # Trova il nome dal dizionario locale
+    player_name = next((n for n, s in NBA_PLAYERS.items() if s == slug), "Unknown")
 
-    # Headers che imitano Chrome reale
-    browser_headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-User': '?1',
-        'Cache-Control': 'max-age=0',
-        'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
-    }
+    # Formato stagione nba_api: "2024-25"
+    season_str = f"{season_end - 1}-{str(season_end)[-2:]}"
 
     try:
-        # Usa una Session: prima visita la homepage per ottenere i cookie,
-        # poi scarica la pagina del giocatore — come farebbe un browser vero
-        session = requests.Session()
-        session.headers.update(browser_headers)
+        # Cerca player_id tramite nba_api
+        all_players = nba_players_static.get_players()
+        matched = [p for p in all_players if p["full_name"].lower() == player_name.lower()]
 
-        # Step 1: warm-up homepage per ottenere cookie
-        try:
-            session.get('https://www.basketball-reference.com/', timeout=10)
-            time.sleep(1.5)
-        except Exception:
-            pass  # se fallisce, proviamo comunque
+        if not matched:
+            # Fallback: cerca per nome parziale
+            first, *rest = player_name.split()
+            last = rest[-1] if rest else ""
+            matched = [p for p in all_players
+                       if first.lower() in p["full_name"].lower()
+                       and last.lower() in p["full_name"].lower()]
 
-        # Step 2: richiesta pagina giocatore con Referer corretto
-        session.headers.update({
-            'Referer': 'https://www.basketball-reference.com/',
-            'Sec-Fetch-Site': 'same-origin',
+        if not matched:
+            return jsonify({"error": f"Giocatore '{player_name}' non trovato in nba_api"}), 404
+
+        player_id = matched[0]["id"]
+
+        # Scarica game log
+        log = playergamelog.PlayerGameLog(
+            player_id=player_id,
+            season=season_str,
+            timeout=30
+        )
+        df = log.get_data_frames()[0]
+
+        if df.empty:
+            return jsonify({"error": f"Nessuna partita trovata per {player_name} nella stagione {season_str}"}), 404
+
+        # ── Rinomina colonne → formato Basketball Reference ────────────────
+        df = df.rename(columns={
+            "GAME_DATE":   "Date",
+            "FGM":         "FG",
+            "FG_PCT":      "FG%",
+            "FG3M":        "3P",
+            "FG3A":        "3PA",
+            "FG3_PCT":     "3P%",
+            "FTM":         "FT",
+            "FT_PCT":      "FT%",
+            "OREB":        "ORB",
+            "DREB":        "DRB",
+            "REB":         "TRB",
+            "PLUS_MINUS":  "+/-",
+            "MIN":         "MP",
         })
 
-        response = None
-        for attempt in range(3):
-            try:
-                if attempt > 0:
-                    time.sleep(3 * attempt)
-                response = session.get(target_url, timeout=25)
+        # ── Colonne numeriche ──────────────────────────────────────────────
+        num_cols = ["FG", "FGA", "FG%", "3P", "3PA", "3P%",
+                    "FT", "FTA", "FT%", "ORB", "DRB", "TRB",
+                    "AST", "STL", "BLK", "TOV", "PF", "PTS", "+/-"]
+        for col in num_cols:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
-                if response.status_code == 429:
-                    # Rate limit: aspetta di più
-                    time.sleep(10)
-                    continue
+        # ── Calcola eFG% ───────────────────────────────────────────────────
+        df["eFG%"] = np.where(
+            df["FGA"] > 0,
+            (df["FG"] + 0.5 * df["3P"]) / df["FGA"],
+            0
+        ).round(3)
 
-                response.raise_for_status()
-                break
-            except requests.exceptions.HTTPError as e:
-                if response and response.status_code == 403:
-                    return jsonify({
-                        "error": "Basketball Reference ha bloccato la richiesta (403). "
-                                 "Prova tra qualche secondo, oppure usa il CSV manuale."
-                    }), 403
-                if attempt == 2:
-                    raise
-            except Exception:
-                if attempt == 2:
-                    raise
+        # ── Calcola GmSc (Game Score) ──────────────────────────────────────
+        df["GmSc"] = (
+            df["PTS"]
+            + 0.4  * df["FG"]
+            - 0.7  * df["FGA"]
+            - 0.4  * (df["FTA"] - df["FT"])
+            + 0.7  * df["ORB"]
+            + 0.3  * df["DRB"]
+            + df["STL"]
+            + 0.7  * df["AST"]
+            + 0.7  * df["BLK"]
+            - 0.4  * df["PF"]
+            - df["TOV"]
+        ).round(1)
 
-        if not response or not response.ok:
-            return jsonify({"error": "Impossibile scaricare i dati"}), 500
+        # ── Calcola 2P, 2PA, 2P% ──────────────────────────────────────────
+        df["2P"]  = df["FG"]  - df["3P"]
+        df["2PA"] = df["FGA"] - df["3PA"]
+        df["2P%"] = np.where(df["2PA"] > 0, df["2P"] / df["2PA"], 0).round(3)
 
-        soup = BeautifulSoup(response.text, 'html.parser')
+        # ── Aggiungi Rk progressivo ────────────────────────────────────────
+        df = df.iloc[::-1].reset_index(drop=True)  # ordine cronologico
+        df["Rk"] = df.index + 1
 
-        # Nome giocatore
-        player_name = "Unknown"
-        h1 = soup.find('h1', {'itemprop': 'name'})
-        if h1:
-            player_name = h1.get_text(strip=True)
+        # ── Seleziona e ordina colonne finali ──────────────────────────────
+        final_cols = ["Rk", "Date", "MP", "FG", "FGA", "FG%",
+                      "3P", "3PA", "3P%", "2P", "2PA", "2P%",
+                      "FT", "FTA", "FT%", "ORB", "DRB", "TRB",
+                      "AST", "STL", "BLK", "TOV", "PF", "PTS",
+                      "GmSc", "+/-", "eFG%"]
+        final_cols = [c for c in final_cols if c in df.columns]
+        df = df[final_cols]
 
-        # Tabella game log
-        table = soup.find('table', {'id': 'pgl_basic'})
-        if not table:
-            return jsonify({"error": f"Game log non trovato per {player_name}. "
-                                      "Potrebbe non aver ancora giocato questa stagione."}), 404
-
-        # ── Colonne ───────────────────────────────────────────────────────
-        thead = table.find('thead')
-        if not thead:
-            return jsonify({"error": "Struttura tabella non valida"}), 500
-
-        col_names = [th.get_text(strip=True) for th in thead.find('tr').find_all('th')]
-        try:
-            idx_rk  = col_names.index('Rk')
-            idx_pts = col_names.index('PTS')
-        except ValueError:
-            return jsonify({"error": "Colonne Rk/PTS non trovate nella tabella"}), 500
-
-        # ── Righe ─────────────────────────────────────────────────────────
-        tbody = table.find('tbody')
-        if not tbody:
-            return jsonify({"error": "Nessuna partita trovata"}), 404
-
-        csv_rows    = [','.join(col_names)]
-        games_count = 0
-
-        for tr in tbody.find_all('tr'):
-            # 1. Salta header ripetuti
-            if 'thead' in tr.get('class', []):
-                continue
-
-            # 2. Salta DNP / Inactive
-            reason_cell = tr.find('td', {'data-stat': 'reason'})
-            if reason_cell and reason_cell.get_text(strip=True):
-                continue
-
-            raw_cells = [td.get_text(strip=True) for td in tr.find_all(['th', 'td'])]
-
-            # 3. Abbastanza colonne
-            if len(raw_cells) < len(col_names):
-                continue
-
-            # 4. Rk deve essere intero
-            rk_val = raw_cells[idx_rk] if idx_rk < len(raw_cells) else ''
-            if not rk_val.isdigit():
-                continue
-
-            # 5. PTS deve essere numerico
-            pts_val = raw_cells[idx_pts] if idx_pts < len(raw_cells) else ''
-            try:
-                float(pts_val)
-            except ValueError:
-                continue
-
-            # 6. Escape virgole
-            escaped = [f'"{c}"' if ',' in c else c for c in raw_cells]
-            csv_rows.append(','.join(escaped))
-            games_count += 1
-
-        if games_count == 0:
-            return jsonify({"error": f"Nessuna partita valida trovata per {player_name} "
-                                      f"nella stagione {season}"}), 404
+        # ── Converti in CSV ────────────────────────────────────────────────
+        csv_text    = df.to_csv(index=False)
+        games_count = len(df)
 
         return jsonify({
             "success":     True,
-            "csv":         '\n'.join(csv_rows),
+            "csv":         csv_text,
             "player_name": player_name,
             "games":       games_count,
-            "season":      season
+            "season":      season_str
         }), 200
 
     except Exception as e:
-        return jsonify({"error": f"Errore scaricamento: {str(e)}"}), 500
+        return jsonify({"error": f"Errore nba_api: {str(e)}"}), 500
 
 
 @app.route("/predict", methods=["POST"])
