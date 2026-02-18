@@ -137,7 +137,6 @@ if (typeof firebase !== "undefined" && !firebase.apps.length) {{
   console.log("✅ Firebase initialized");
 }}
 """
-    from flask import Response
     response = Response(js_content, mimetype='application/javascript')
     response.headers['Cache-Control'] = 'no-store'
     return response
