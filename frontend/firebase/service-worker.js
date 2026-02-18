@@ -68,6 +68,9 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
+  // Ignora URL non HTTP (chrome-extension://, ecc.)
+  if (!event.request.url.startsWith("http")) return;
+
   // Chiamate API → sempre dalla rete (mai cachare risposte dinamiche)
   const isApiCall = [
     "/predict",

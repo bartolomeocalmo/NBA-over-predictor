@@ -120,10 +120,16 @@ def serve_service_worker():
     return response
 
 
+@app.route("/style.css")
 @app.route("/styles.css")
 def serve_styles():
-    """Serve external CSS file"""
     return send_from_directory(FRONTEND_PATH, 'style.css')
+
+
+@app.route("/icons/<path:filename>")
+def serve_icons(filename):
+    icons_path = os.path.join(FRONTEND_PATH, 'icons')
+    return send_from_directory(icons_path, filename)
 
 
 # ============================================
@@ -527,7 +533,7 @@ def health():
 if __name__ == "__main__":
     print("\n")
     print("=" * 70)
-    print(" 🏀 NBA OVER PREDICTOR - SERVER STARTED")
+    print("  🏀 NBA OVER PREDICTOR - SERVER STARTED")
     print("=" * 70)
     print(f"  🌐 Server URL:     http://127.0.0.1:5000")
     print(f"  🔥 Firebase:       ENABLED")
