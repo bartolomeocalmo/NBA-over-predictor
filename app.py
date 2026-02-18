@@ -152,10 +152,6 @@ def serve_manifest():
     return send_from_directory(FRONTEND_PATH, 'manifest.json')
 
 
-@app.route("/logo.png")
-def serve_logo():
-    return send_from_directory(FRONTEND_PATH, 'logo.png')
-
 
 @app.route("/service-worker.js")
 def serve_service_worker():
