@@ -138,12 +138,20 @@
         border-radius: var(--radius-lg);
         border: 1px solid var(--border-color);
         box-shadow: var(--shadow-md);
+        overflow: hidden;
       }
 
       .logo {
         display: flex;
         align-items: center;
         line-height: 1;
+        flex-shrink: 0;
+      }
+
+      .logo img {
+        display: block;
+        max-width: 160px;
+        height: auto;
       }
 
       /* Adatta colori SVG al tema light */
@@ -158,6 +166,9 @@
         display: flex;
         align-items: center;
         gap: var(--space-sm);
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        min-width: 0;
       }
 
       .user-avatar {
@@ -881,7 +892,12 @@
         <img
           src="/logo.png"
           alt="NBA Over Predictor"
-          style="height: 52px; width: auto"
+          style="
+            height: 44px;
+            width: auto;
+            display: block;
+            mix-blend-mode: normal;
+          "
         />
       </div>
       <div class="user-section">
@@ -937,7 +953,9 @@
             style="
               display: flex;
               justify-content: space-between;
-              align-items: start;
+              align-items: flex-start;
+              flex-wrap: wrap;
+              gap: 12px;
             "
           >
             <div>
@@ -969,14 +987,26 @@
                 </div>
               </div>
             </div>
-            <div style="display: flex; gap: 8px">
-              <button onclick="showDashboard()" class="btn btn-secondary">
+            <div
+              style="
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+                flex-shrink: 0;
+              "
+            >
+              <button
+                onclick="showDashboard()"
+                class="btn btn-secondary"
+                style="white-space: nowrap"
+              >
                 Cambia Progetto
               </button>
               <button
                 onclick="deleteActiveProject()"
                 class="btn"
-                style="background: #f56565"
+                style="background: #f56565; white-space: nowrap"
               >
                 🗑️ Elimina
               </button>
@@ -1225,7 +1255,7 @@
                     <div
                       style="
                         font-size: 14px;
-                        color: #718096;
+                        color: var(--text-secondary);
                         margin-bottom: 8px;
                       "
                     >
@@ -1238,7 +1268,11 @@
                       --
                     </div>
                     <div
-                      style="font-size: 13px; color: #718096; margin-top: 8px"
+                      style="
+                        font-size: 13px;
+                        color: var(--text-secondary);
+                        margin-top: 8px;
+                      "
                       id="stakeInfo"
                     >
                       --
@@ -1767,25 +1801,25 @@
             
             <div onclick="selectProject('${p.id}')" style="cursor: pointer;">
               <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px;">
-                <div style="text-align: center; padding: 12px; background: #f7fafc; border-radius: 8px;">
+                <div style="text-align: center; padding: 12px; background: var(--bg-input); border-radius: 8px; border: 1px solid var(--border-color);">
                   <div style="font-size: 20px; font-weight: 700; color: ${profit >= 0 ? "#48bb78" : "#f56565"}">
                     ${profit >= 0 ? "+" : ""}${profit.toFixed(2)}€
                   </div>
-                  <div style="font-size: 11px; color: #718096;">Profitto</div>
+                  <div style="font-size: 11px; color: var(--text-secondary);">Profitto</div>
                 </div>
-                <div style="text-align: center; padding: 12px; background: #f7fafc; border-radius: 8px;">
-                  <div style="font-size: 20px; font-weight: 700;">${p.bankroll_current.toFixed(2)}€</div>
-                  <div style="font-size: 11px; color: #718096;">Bankroll</div>
+                <div style="text-align: center; padding: 12px; background: var(--bg-input); border-radius: 8px; border: 1px solid var(--border-color);">
+                  <div style="font-size: 20px; font-weight: 700; color: var(--text-primary);">${p.bankroll_current.toFixed(2)}€</div>
+                  <div style="font-size: 11px; color: var(--text-secondary);">Bankroll</div>
                 </div>
               </div>
               
-              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; font-size: 13px; color: #718096;">
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; font-size: 13px; color: var(--text-secondary);">
                 <div>Eventi: ${p.events_played}/${p.total_events}</div>
                 <div>Vinte: ${p.events_won}</div>
                 <div>Perse: ${p.events_lost}</div>
               </div>
               
-              <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-bottom: 12px;">
+              <div style="width: 100%; height: 8px; background: var(--border-color); border-radius: 4px; overflow: hidden; margin-bottom: 12px;">
                 <div style="width: ${progress}%; height: 100%; background: linear-gradient(90deg, #48bb78, #38a169);"></div>
               </div>
               
@@ -2421,7 +2455,7 @@
               ${event.player} > ${event.threshold} pts
               ${event.result === "pending" ? "⏳ Pending" : event.result === "won" ? "✅ Vinta" : "❌ Persa"}
             </div>
-            <div style="font-size: 13px; color: #718096;">
+            <div style="font-size: 13px; color: var(--text-secondary);">
               Stake: ${event.stake.toFixed(2)}€ | Quota: ${event.odds} | Prob: ${(event.probability * 100).toFixed(1)}%
             </div>
           </div>
