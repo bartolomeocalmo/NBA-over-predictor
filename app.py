@@ -103,7 +103,36 @@ def serve_index():
 
 @app.route("/firebase-config.js")
 def serve_firebase_config():
-    return send_from_directory(FRONTEND_PATH, 'firebase-config.js')
+    """Genera firebase-config.js dinamicamente dalle variabili d'ambiente"""
+    config = {
+        "apiKey":            os.environ.get("FIREBASE_API_KEY", ""),
+        "authDomain":        os.environ.get("FIREBASE_AUTH_DOMAIN", ""),
+        "projectId":         os.environ.get("FIREBASE_PROJECT_ID", ""),
+        "storageBucket":     os.environ.get("FIREBASE_STORAGE_BUCKET", ""),
+        "messagingSenderId": os.environ.get("FIREBASE_MESSAGING_SENDER_ID", ""),
+        "appId":             os.environ.get("FIREBASE_APP_ID", ""),
+        "measurementId":     os.environ.get("FIREBASE_MEASUREMENT_ID", ""),
+    }
+
+    js_content = f"""const firebaseConfig = {{
+  apiKey: "{config['apiKey']}",
+  authDomain: "{config['authDomain']}",
+  projectId: "{config['projectId']}",
+  storageBucket: "{config['storageBucket']}",
+  messagingSenderId: "{config['messagingSenderId']}",
+  appId: "{config['appId']}",
+  measurementId: "{config['measurementId']}",
+}};
+
+if (typeof firebase !== "undefined" && !firebase.apps.length) {{
+  firebase.initializeApp(firebaseConfig);
+  console.log("✅ Firebase initialized");
+}}
+"""
+    from flask import Response
+    response = Response(js_content, mimetype='application/javascript')
+    response.headers['Cache-Control'] = 'no-store'
+    return response
 
 
 @app.route("/manifest.json")

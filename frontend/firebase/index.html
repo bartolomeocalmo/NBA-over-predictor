@@ -140,10 +140,17 @@
       }
 
       .logo {
-        font-size: 24px;
-        font-weight: 800;
-        color: var(--accent-primary);
-        letter-spacing: -0.5px;
+        display: flex;
+        align-items: center;
+        line-height: 1;
+      }
+
+      /* Adatta colori SVG al tema light */
+      [data-theme="light"] .logo svg text,
+      [data-theme="light"] .logo svg polygon,
+      [data-theme="light"] .logo svg line {
+        fill: #2d3f5e;
+        stroke: #2d3f5e;
       }
 
       .user-section {
@@ -700,7 +707,106 @@
   <body>
     <!-- HEADER -->
     <div class="header">
-      <div class="logo">🏀 NBA Over Predictor</div>
+      <div class="logo">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 560 160"
+          height="52"
+          aria-label="NBA Over Predictor"
+        >
+          <!-- NBA — ogni lettera ~58px con font-size 80 -->
+          <text
+            x="14"
+            y="90"
+            font-family="'Arial Black','Helvetica Neue',sans-serif"
+            font-weight="900"
+            font-size="80"
+            letter-spacing="2"
+            fill="#2d3f5e"
+          >
+            NBA
+          </text>
+
+          <!-- VER — inizia dopo la palla (258 + 14 = 272) -->
+          <text
+            x="272"
+            y="90"
+            font-family="'Arial Black','Helvetica Neue',sans-serif"
+            font-weight="900"
+            font-size="80"
+            letter-spacing="2"
+            fill="#2d3f5e"
+          >
+            VER
+          </text>
+
+          <!-- Basketball (la O) — centrata tra NBA e VER -->
+          <!-- NBA finisce ~196, VER inizia ~272 → centro = 234, ma usiamo 222 con gap simmetrico -->
+          <circle cx="228" cy="62" r="36" fill="#c8622a" />
+          <circle
+            cx="228"
+            cy="62"
+            r="36"
+            fill="none"
+            stroke="#2d3f5e"
+            stroke-width="2.2"
+          />
+          <line
+            x1="228"
+            y1="26"
+            x2="228"
+            y2="98"
+            stroke="#2d3f5e"
+            stroke-width="2.2"
+          />
+          <path
+            d="M192 62 Q228 43 264 62"
+            fill="none"
+            stroke="#2d3f5e"
+            stroke-width="2.2"
+          />
+          <path
+            d="M192 62 Q228 81 264 62"
+            fill="none"
+            stroke="#2d3f5e"
+            stroke-width="2.2"
+          />
+
+          <!-- Arco arancione sopra la palla -->
+          <path
+            d="M200 26 Q228 9 256 26"
+            fill="none"
+            stroke="#c8622a"
+            stroke-width="4"
+            stroke-linecap="round"
+          />
+
+          <!-- Freccia in alto a destra -->
+          <line
+            x1="450"
+            y1="70"
+            x2="496"
+            y2="16"
+            stroke="#2d3f5e"
+            stroke-width="5"
+            stroke-linecap="round"
+          />
+          <polygon points="496,16 476,22 490,38" fill="#2d3f5e" />
+
+          <!-- PREDICTOR centrato sotto -->
+          <text
+            x="88"
+            y="148"
+            font-family="'Arial Black','Helvetica Neue',sans-serif"
+            font-weight="900"
+            font-size="32"
+            letter-spacing="10"
+            fill="#2d3f5e"
+          >
+            PREDICTOR
+          </text>
+        </svg>
+      </div>
       <div class="user-section">
         <!-- THEME TOGGLE -->
         <button onclick="toggleTheme()" class="theme-toggle" id="themeToggle">
