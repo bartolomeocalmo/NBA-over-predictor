@@ -1269,9 +1269,14 @@
                 onUserLoggedOut();
               }
             });
+          } else {
+            // Firebase non disponibile: mostra comunque il predictor
+            console.log("Firebase non configurato — modalità offline");
+            showPredictor();
           }
         } catch (error) {
-          console.log("Firebase not configured");
+          console.log("Firebase non configurato — modalità offline");
+          showPredictor();
         }
       });
 
