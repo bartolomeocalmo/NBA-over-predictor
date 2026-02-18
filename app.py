@@ -19,6 +19,25 @@ app = Flask(__name__)
 CORS(app)
 
 # ============================================
+# CACHE GIOCATORI NBA (caricata una volta all'avvio)
+# ============================================
+
+_ALL_NBA_PLAYERS = []  # cache globale
+
+def get_all_players():
+    """Carica e cachea tutti i giocatori NBA da nba_api"""
+    global _ALL_NBA_PLAYERS
+    if _ALL_NBA_PLAYERS:
+        return _ALL_NBA_PLAYERS
+    try:
+        if NBA_API_AVAILABLE:
+            _ALL_NBA_PLAYERS = nba_players_static.get_players()
+            print(f"✅ Caricati {len(_ALL_NBA_PLAYERS)} giocatori da nba_api")
+    except Exception as e:
+        print(f"⚠️  Errore caricamento giocatori: {e}")
+    return _ALL_NBA_PLAYERS
+
+# ============================================
 # CONFIGURAZIONE FRONTEND FIREBASE
 # ============================================
 
@@ -181,9 +200,9 @@ def serve_icons(filename):
 @app.route("/search_players", methods=["POST"])
 def search_players():
     """
-    Autocomplete giocatori NBA
+    Autocomplete giocatori NBA tramite nba_api (tutti i giocatori NBA di sempre)
     Input:  {"query": "lebr"}
-    Output: {"results": [{"name": "LeBron James", "slug": "jamesle01"}, ...]}
+    Output: {"results": [{"name": "LeBron James", "player_id": 2544}, ...]}
     """
     data = request.get_json()
     query = data.get("query", "").lower().strip()
@@ -191,13 +210,26 @@ def search_players():
     if not query or len(query) < 2:
         return jsonify({"results": []}), 200
 
-    results = []
-    for name, slug in NBA_PLAYERS.items():
-        if query in name.lower():
-            results.append({"name": name, "slug": slug})
+    all_players = get_all_players()
 
-    # Priorità: nomi che iniziano con la query
-    results.sort(key=lambda x: (not x["name"].lower().startswith(query), x["name"]))
+    results = []
+    for p in all_players:
+        # Solo giocatori attivi
+        if not p.get("is_active", False):
+            continue
+        full_name = p.get("full_name", "")
+        if query in full_name.lower():
+            results.append({
+                "name":      full_name,
+                "player_id": p["id"],
+                "is_active": True
+            })
+
+    # Priorità: nome inizia con query, poi alfabetico
+    results.sort(key=lambda x: (
+        not x["name"].lower().startswith(query),
+        x["name"]
+    ))
 
     return jsonify({"results": results[:10]}), 200
 
@@ -213,39 +245,18 @@ def fetch_player_csv():
         return jsonify({"error": "nba_api non installato sul server"}), 500
 
     data       = request.get_json()
-    slug       = data.get("slug", "").strip()
+    player_id  = data.get("player_id")
+    player_name = data.get("player_name", "Unknown")
     season_end = int(data.get("season", "2025"))
 
-    if not slug:
-        return jsonify({"error": "Slug mancante"}), 400
-
-    known_slugs = set(NBA_PLAYERS.values())
-    if slug not in known_slugs:
-        return jsonify({"error": "Giocatore non riconosciuto"}), 400
-
-    # Trova il nome dal dizionario locale
-    player_name = next((n for n, s in NBA_PLAYERS.items() if s == slug), "Unknown")
+    if not player_id:
+        return jsonify({"error": "player_id mancante"}), 400
 
     # Formato stagione nba_api: "2024-25"
     season_str = f"{season_end - 1}-{str(season_end)[-2:]}"
 
     try:
-        # Cerca player_id tramite nba_api
-        all_players = nba_players_static.get_players()
-        matched = [p for p in all_players if p["full_name"].lower() == player_name.lower()]
-
-        if not matched:
-            # Fallback: cerca per nome parziale
-            first, *rest = player_name.split()
-            last = rest[-1] if rest else ""
-            matched = [p for p in all_players
-                       if first.lower() in p["full_name"].lower()
-                       and last.lower() in p["full_name"].lower()]
-
-        if not matched:
-            return jsonify({"error": f"Giocatore '{player_name}' non trovato in nba_api"}), 404
-
-        player_id = matched[0]["id"]
+        player_id = int(player_id)
 
         # Scarica game log
         log = playergamelog.PlayerGameLog(
@@ -552,5 +563,3 @@ if __name__ == "__main__":
     print("  ✅ APRI IL BROWSER SU: http://127.0.0.1:5000/")
     print("=" * 70)
     print("\n")
-
-    

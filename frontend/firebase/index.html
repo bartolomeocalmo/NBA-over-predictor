@@ -1359,11 +1359,11 @@
       // ============================================================
 
       let searchTimeout = null;
-      let selectedSlug = null;
+      let selectedPlayerId = null;
       let highlightIdx = -1;
 
       function onPlayerSearch(query) {
-        selectedSlug = null;
+        selectedPlayerId = null;
         clearTimeout(searchTimeout);
         closeDropdown();
 
@@ -1401,14 +1401,14 @@
           <div
             class="search-item"
             data-idx="${i}"
-            data-slug="${r.slug}"
+            data-player-id="${r.player_id}"
             data-name="${r.name}"
-            onclick="selectPlayer('${r.slug}', '${r.name}')"
+            onclick="selectPlayer('${r.player_id}', '${r.name}')"
             onmouseover="highlightItem(${i})"
             style="padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 14px; display: flex; justify-content: space-between; align-items: center;"
           >
             <span>🏀 ${r.name}</span>
-            <span style="font-size: 11px; color: #a0aec0; font-family: monospace;">${r.slug}</span>
+            <span style="font-size: 11px; color: #a0aec0;">NBA</span>
           </div>
         `,
           )
@@ -1453,7 +1453,7 @@
         } else if (e.key === "Enter" && highlightIdx >= 0) {
           e.preventDefault();
           const item = items[highlightIdx];
-          selectPlayer(item.dataset.slug, item.dataset.name);
+          selectPlayer(item.dataset.playerId, item.dataset.name);
         } else if (e.key === "Escape") {
           closeDropdown();
         }
@@ -1469,9 +1469,9 @@
         }
       });
 
-      async function selectPlayer(slug, name) {
+      async function selectPlayer(playerId, name) {
         closeDropdown();
-        selectedSlug = slug;
+        selectedPlayerId = playerId;
         document.getElementById("playerSearchInput").value = name;
 
         // Reset stato precedente
@@ -1490,13 +1490,17 @@
         statusEl.style.padding = "10px 14px";
         statusEl.style.borderRadius = "8px";
         statusEl.style.fontSize = "14px";
-        statusEl.innerHTML = `⏳ Scaricando dati di <strong>${name}</strong> da Basketball Reference...`;
+        statusEl.innerHTML = `⏳ Scaricando dati di <strong>${name}</strong> da NBA API...`;
 
         try {
           const res = await fetch("/fetch_player_csv", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ slug, season: "2026" }),
+            body: JSON.stringify({
+              player_id: playerId,
+              player_name: name,
+              season: "2026",
+            }),
           });
 
           const data = await res.json();
