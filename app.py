@@ -14,7 +14,7 @@ CORS(app)
 # CONFIGURAZIONE FRONTEND FIREBASE
 # ============================================
 
-FRONTEND_PATH = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'firebase')
+FRONTEND_PATH = os.path.join(os.path.dirname(__file__), 'frontend', 'firebase')
 
 print("=" * 70)
 print("🏀 NBA OVER PREDICTOR - FIREBASE VERSION")
