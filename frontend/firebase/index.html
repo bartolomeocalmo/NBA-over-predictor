@@ -1,0 +1,2337 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NBA Over Predictor Pro - Automatic Betting</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#3b82f6" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="NBA Predictor" />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- Plotly -->
+    <script src="https://cdn.plot.ly/plotly-2.34.0.min.js"></script>
+
+    <style>
+      /* ============================================
+         DUAL THEME: DARK + LIGHT
+         ============================================ */
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      /* ============================================
+         DARK THEME (Default)
+         ============================================ */
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: #0f0f0f;
+        color: #f5f5f5;
+        min-height: 100vh;
+        padding: 20px;
+        line-height: 1.6;
+        transition:
+          background 0.3s ease,
+          color 0.3s ease;
+      }
+
+      body[data-theme="light"] {
+        background: #f5f5f5;
+        color: #1f2937;
+      }
+
+      /* ============================================
+         CSS VARIABLES BY THEME
+         ============================================ */
+
+      :root {
+        /* Dark Theme */
+        --bg-primary: #0f0f0f;
+        --bg-secondary: #1a1a1a;
+        --bg-card: #242424;
+        --bg-card-hover: #2a2a2a;
+        --bg-input: #1e1e1e;
+        --text-primary: #f5f5f5;
+        --text-secondary: #a0a0a0;
+        --text-muted: #6b6b6b;
+        --border-color: #333333;
+        --border-subtle: #2a2a2a;
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+        --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+      }
+
+      [data-theme="light"] {
+        /* Light Theme */
+        --bg-primary: #f5f5f5;
+        --bg-secondary: #ffffff;
+        --bg-card: #ffffff;
+        --bg-card-hover: #f9fafb;
+        --bg-input: #ffffff;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --text-muted: #9ca3af;
+        --border-color: #e5e7eb;
+        --border-subtle: #f3f4f6;
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+      }
+
+      /* Shared Colors (same for both themes) */
+      :root,
+      [data-theme="light"] {
+        --accent-primary: #3b82f6;
+        --accent-primary-hover: #2563eb;
+        --accent-success: #10b981;
+        --accent-success-hover: #059669;
+        --accent-warning: #f59e0b;
+        --accent-error: #ef4444;
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --space-xs: 8px;
+        --space-sm: 12px;
+        --space-md: 16px;
+        --space-lg: 24px;
+        --space-xl: 32px;
+      }
+
+      /* ============================================
+         HEADER
+         ============================================ */
+
+      .header {
+        max-width: 1400px;
+        margin: 0 auto 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--space-lg);
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-md);
+      }
+
+      .logo {
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--accent-primary);
+        letter-spacing: -0.5px;
+      }
+
+      .user-section {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+      }
+
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid var(--accent-primary);
+      }
+
+      /* ============================================
+         THEME TOGGLE BUTTON
+         ============================================ */
+
+      .theme-toggle {
+        padding: 10px 16px;
+        background: var(--bg-card-hover);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .theme-toggle:hover {
+        background: var(--border-color);
+        transform: translateY(-1px);
+      }
+
+      /* ============================================
+         BUTTONS
+         ============================================ */
+
+      .btn {
+        padding: 10px 20px;
+        background: var(--accent-primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+      }
+
+      .btn:hover {
+        background: var(--accent-primary-hover);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-sm);
+      }
+
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .btn-secondary {
+        background: var(--bg-card-hover);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+      }
+
+      .btn-secondary:hover {
+        background: var(--border-color);
+      }
+
+      .btn-primary-full {
+        width: 100%;
+        padding: 14px;
+        background: var(--accent-primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        font-size: 16px;
+        cursor: pointer;
+        margin-top: 10px;
+        transition: all 0.2s ease;
+      }
+
+      .btn-primary-full:hover {
+        background: var(--accent-primary-hover);
+      }
+
+      .btn-primary-full:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* ============================================
+         VIEWS & LAYOUT
+         ============================================ */
+
+      .view {
+        display: none;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .view.active {
+        display: block;
+      }
+
+      .container {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        padding: 40px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-lg);
+      }
+
+      /* ============================================
+         DASHBOARD
+         ============================================ */
+
+      .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--space-lg);
+      }
+
+      .dashboard-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--text-primary);
+      }
+
+      .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 20px;
+      }
+
+      /* ============================================
+         PROJECT CARDS
+         ============================================ */
+
+      .project-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        padding: var(--space-lg);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid var(--border-color);
+      }
+
+      .project-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--accent-primary);
+      }
+
+      .project-card.active {
+        border-color: var(--accent-success);
+        box-shadow: 0 0 0 1px var(--accent-success);
+      }
+
+      .project-card.completed {
+        border-color: var(--accent-primary);
+      }
+
+      .project-card.failed {
+        border-color: var(--accent-error);
+      }
+
+      /* ============================================
+         ACTIVE PROJECT BANNER
+         ============================================ */
+
+      .active-project-banner {
+        background: linear-gradient(
+          135deg,
+          var(--accent-success) 0%,
+          #059669 100%
+        );
+        color: white;
+        padding: 20px;
+        border-radius: var(--radius-md);
+        margin-bottom: var(--space-lg);
+        box-shadow: var(--shadow-md);
+      }
+
+      .active-project-banner h3 {
+        font-size: 18px;
+        margin-bottom: 12px;
+        opacity: 0.95;
+      }
+
+      .active-project-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--space-md);
+      }
+
+      .active-project-stat {
+        text-align: center;
+      }
+
+      .active-project-stat-value {
+        font-size: 24px;
+        font-weight: 800;
+      }
+
+      .active-project-stat-label {
+        font-size: 11px;
+        opacity: 0.9;
+        margin-top: 4px;
+      }
+
+      /* ============================================
+         FORMS
+         ============================================ */
+
+      .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        background: var(--bg-input);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        margin-bottom: var(--space-md);
+        font-size: 16px;
+        color: var(--text-primary);
+        font-family: inherit;
+        transition: all 0.2s ease;
+      }
+
+      .form-input:focus {
+        outline: none;
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      .form-input::placeholder {
+        color: var(--text-muted);
+      }
+
+      textarea.form-input {
+        resize: vertical;
+        font-family: monospace;
+      }
+
+      label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: var(--space-xs);
+        color: var(--text-secondary);
+      }
+
+      /* ============================================
+         MESSAGES
+         ============================================ */
+
+      .success-message,
+      .error-message,
+      .info-message {
+        padding: 12px 16px;
+        border-radius: var(--radius-sm);
+        margin-bottom: var(--space-md);
+        font-size: 14px;
+        border-left: 4px solid;
+      }
+
+      .success-message {
+        background: rgba(16, 185, 129, 0.1);
+        border-left-color: var(--accent-success);
+        color: #6ee7b7;
+        display: none;
+      }
+
+      [data-theme="light"] .success-message {
+        color: #065f46;
+      }
+
+      .error-message {
+        background: rgba(239, 68, 68, 0.1);
+        border-left-color: var(--accent-error);
+        color: #fca5a5;
+        display: none;
+      }
+
+      [data-theme="light"] .error-message {
+        color: #991b1b;
+      }
+
+      .info-message {
+        background: rgba(59, 130, 246, 0.1);
+        border-left-color: var(--accent-primary);
+        color: #93c5fd;
+      }
+
+      [data-theme="light"] .info-message {
+        color: #1e40af;
+      }
+
+      /* ============================================
+         MODAL
+         ============================================ */
+
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal.active {
+        display: flex;
+      }
+
+      .modal-content {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 40px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: var(--shadow-lg);
+      }
+
+      .modal-content h2 {
+        margin-bottom: var(--space-lg);
+        color: var(--text-primary);
+      }
+
+      /* ============================================
+         EVENTS HISTORY
+         ============================================ */
+
+      .events-history {
+        margin-top: var(--space-lg);
+        padding: 20px;
+        background: var(--bg-card);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
+      }
+
+      .events-history h3 {
+        margin-bottom: var(--space-md);
+        color: var(--text-primary);
+      }
+
+      .event-item {
+        padding: var(--space-md);
+        background: var(--bg-input);
+        border-radius: var(--radius-sm);
+        margin-bottom: var(--space-sm);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-left: 4px solid;
+      }
+
+      .event-pending {
+        border-left-color: var(--accent-warning);
+      }
+
+      .event-won {
+        border-left-color: var(--accent-success);
+      }
+
+      .event-lost {
+        border-left-color: var(--accent-error);
+      }
+
+      /* ============================================
+         BET ANALYSIS BOXES
+         ============================================ */
+
+      .bet-recommended {
+        background: linear-gradient(
+          135deg,
+          var(--accent-success) 0%,
+          #059669 100%
+        );
+      }
+
+      .bet-not-recommended {
+        background: linear-gradient(
+          135deg,
+          var(--accent-error) 0%,
+          #dc2626 100%
+        );
+      }
+
+      .next-bet-box {
+        padding: 20px;
+        background: linear-gradient(
+          135deg,
+          var(--accent-primary) 0%,
+          #2563eb 100%
+        );
+        color: white;
+        border-radius: var(--radius-md);
+        margin-top: var(--space-md);
+        box-shadow: var(--shadow-md);
+      }
+
+      .next-bet-box h4 {
+        margin-bottom: 12px;
+        opacity: 0.95;
+      }
+
+      .next-bet-value {
+        font-size: 36px;
+        font-weight: 800;
+        margin: 8px 0;
+      }
+
+      /* ============================================
+         AUTOCOMPLETE SEARCH
+         ============================================ */
+
+      #searchDropdown {
+        background: var(--bg-card);
+        border: 2px solid var(--accent-primary);
+        color: var(--text-primary);
+      }
+
+      .search-item {
+        padding: 12px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid var(--border-subtle);
+        font-size: 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background 0.15s ease;
+        color: var(--text-primary);
+      }
+
+      .search-item:hover,
+      .search-item:focus {
+        background: var(--bg-card-hover) !important;
+      }
+
+      .search-item:last-child {
+        border-bottom: none;
+      }
+
+      /* ============================================
+         DETAILS/SUMMARY
+         ============================================ */
+
+      details {
+        margin-bottom: var(--space-lg);
+      }
+
+      details summary {
+        color: var(--accent-primary);
+        font-weight: 600;
+        padding: var(--space-sm) 0;
+        cursor: pointer;
+        user-select: none;
+        transition: color 0.2s ease;
+      }
+
+      details summary:hover {
+        color: var(--accent-primary-hover);
+      }
+
+      details[open] summary {
+        margin-bottom: var(--space-md);
+      }
+
+      /* ============================================
+         SCROLLBAR
+         ============================================ */
+
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 5px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #444444;
+      }
+
+      [data-theme="light"] ::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+      }
+
+      [data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af;
+      }
+
+      /* ============================================
+         RESPONSIVE
+         ============================================ */
+
+      @media (max-width: 768px) {
+        .header {
+          flex-direction: column;
+          gap: var(--space-md);
+        }
+
+        .active-project-stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .projects-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .container {
+          padding: var(--space-lg);
+        }
+      }
+
+      @media (max-width: 480px) {
+        body {
+          padding: 12px;
+        }
+
+        .header {
+          padding: var(--space-md);
+        }
+
+        .logo {
+          font-size: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- HEADER -->
+    <div class="header">
+      <div class="logo">🏀 NBA Over Predictor</div>
+      <div class="user-section">
+        <!-- THEME TOGGLE -->
+        <button onclick="toggleTheme()" class="theme-toggle" id="themeToggle">
+          <span id="themeIcon">🌙</span>
+          <span id="themeText">Dark</span>
+        </button>
+
+        <div id="loggedOutSection">
+          <button onclick="handleLogin()" class="btn">Login con Google</button>
+        </div>
+
+        <div id="loggedInSection" style="display: none">
+          <img id="userAvatar" class="user-avatar" />
+          <span id="userName" style="font-weight: 600"></span>
+          <button onclick="showDashboard()" class="btn btn-secondary">
+            Dashboard
+          </button>
+          <button onclick="handleLogout()" class="btn btn-secondary">
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD VIEW -->
+    <div id="dashboardView" class="view">
+      <div class="dashboard-header">
+        <div class="dashboard-title">I Miei Progetti</div>
+        <button
+          onclick="openNewProjectModal()"
+          class="btn"
+          style="background: white; color: #667eea"
+        >
+          + Nuovo Progetto
+        </button>
+      </div>
+
+      <div class="projects-grid" id="projectsGrid"></div>
+    </div>
+
+    <!-- PREDICTOR VIEW -->
+    <div id="predictorView" class="view">
+      <div class="container">
+        <!-- ACTIVE PROJECT BANNER -->
+        <div
+          id="activeProjectBanner"
+          style="display: none"
+          class="active-project-banner"
+        >
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: start;
+            "
+          >
+            <div>
+              <h3 id="activeProjectName">Progetto</h3>
+              <div class="active-project-stats">
+                <div class="active-project-stat">
+                  <div class="active-project-stat-value" id="activeBankroll">
+                    --
+                  </div>
+                  <div class="active-project-stat-label">Bankroll Corrente</div>
+                </div>
+                <div class="active-project-stat">
+                  <div class="active-project-stat-value" id="activeProgress">
+                    --
+                  </div>
+                  <div class="active-project-stat-label">Eventi</div>
+                </div>
+                <div class="active-project-stat">
+                  <div class="active-project-stat-value" id="activeProfit">
+                    --
+                  </div>
+                  <div class="active-project-stat-label">Profitto</div>
+                </div>
+                <div class="active-project-stat">
+                  <div class="active-project-stat-value" id="activeTarget">
+                    --
+                  </div>
+                  <div class="active-project-stat-label">Target</div>
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px">
+              <button onclick="showDashboard()" class="btn btn-secondary">
+                Cambia Progetto
+              </button>
+              <button
+                onclick="deleteActiveProject()"
+                class="btn"
+                style="background: #f56565"
+              >
+                🗑️ Elimina
+              </button>
+            </div>
+          </div>
+
+          <!-- Target info (sempre visibile) -->
+          <div
+            id="activeTargetInfo"
+            style="
+              display: none;
+              margin-top: 14px;
+              padding: 10px 14px;
+              border-radius: 8px;
+              font-size: 13px;
+            "
+          ></div>
+        </div>
+
+        <!-- INFO NO PROJECT -->
+        <div id="noProjectInfo" class="info-message">
+          ℹ️ <strong>Nessun progetto attivo.</strong> Fai il Login e salva i
+          tuoi progetti!
+        </div>
+
+        <h1 style="font-size: 28px; font-weight: 800; margin-bottom: 24px">
+          NBA Over Predictor
+        </h1>
+
+        <!-- CSV LOADING -->
+        <div style="font-size: 20px; font-weight: 700; margin-bottom: 16px">
+          📊 1. Carica Dati Giocatore
+        </div>
+
+        <!-- AUTOCOMPLETE SEARCH -->
+        <div style="margin-bottom: 20px; position: relative">
+          <label
+            style="
+              display: block;
+              font-size: 14px;
+              font-weight: 600;
+              margin-bottom: 8px;
+            "
+          >
+            🔎 Cerca giocatore NBA
+          </label>
+          <div style="position: relative">
+            <input
+              type="text"
+              id="playerSearchInput"
+              class="form-input"
+              placeholder="Es. LeBron, Curry, Wembanyama..."
+              autocomplete="off"
+              style="margin-bottom: 0"
+              oninput="onPlayerSearch(this.value)"
+              onkeydown="onSearchKeyDown(event)"
+            />
+            <!-- DROPDOWN RISULTATI -->
+            <div
+              id="searchDropdown"
+              style="
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: white;
+                border: 2px solid #667eea;
+                border-top: none;
+                border-radius: 0 0 8px 8px;
+                z-index: 100;
+                max-height: 260px;
+                overflow-y: auto;
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+              "
+            ></div>
+          </div>
+
+          <!-- STATO CARICAMENTO -->
+          <div
+            id="playerSearchStatus"
+            style="margin-top: 10px; display: none"
+          ></div>
+        </div>
+
+        <!-- FALLBACK MANUALE -->
+        <details style="margin-bottom: 24px">
+          <summary
+            style="
+              color: #667eea;
+              font-weight: 600;
+              padding: 8px 0;
+              cursor: pointer;
+            "
+          >
+            📝 Alternativa: Incolla CSV manuale da Basketball Reference
+          </summary>
+          <div style="margin-top: 12px">
+            <textarea
+              id="manualCsv"
+              class="form-input"
+              style="height: 100px; font-family: monospace; font-size: 12px"
+              placeholder="Incolla CSV da Basketball Reference..."
+            ></textarea>
+            <button onclick="loadManualCsv()" class="btn-primary-full">
+              Carica CSV
+            </button>
+          </div>
+        </details>
+
+        <div class="success-message" id="playerLoadedMsg"></div>
+        <div class="error-message" id="errorMsg"></div>
+
+        <!-- AUTOMATED ANALYSIS -->
+        <div style="margin-top: 32px">
+          <div style="font-size: 20px; font-weight: 700; margin-bottom: 16px">
+            🤖 2. Analisi Scommessa
+          </div>
+
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 16px;
+              margin-bottom: 16px;
+            "
+          >
+            <div>
+              <label
+                style="
+                  display: block;
+                  font-size: 14px;
+                  font-weight: 600;
+                  margin-bottom: 8px;
+                "
+                >Soglia Punti Over</label
+              >
+              <input
+                type="number"
+                id="pointLine"
+                class="form-input"
+                step="0.5"
+                placeholder="28.5"
+              />
+            </div>
+            <div>
+              <label
+                style="
+                  display: block;
+                  font-size: 14px;
+                  font-weight: 600;
+                  margin-bottom: 8px;
+                "
+                >Quota Bookmaker</label
+              >
+              <input
+                type="number"
+                id="odds"
+                class="form-input"
+                value="1.90"
+                step="0.05"
+              />
+            </div>
+          </div>
+
+          <button
+            onclick="analyzeAutomaticBet()"
+            class="btn-primary-full"
+            id="btnAnalyze"
+            disabled
+          >
+            🔍 ANALIZZA SCOMMESSA
+          </button>
+
+          <!-- ANALYSIS RESULT -->
+          <div id="analysisResult" style="display: none; margin-top: 24px">
+            <!-- Probability -->
+            <div
+              style="
+                padding: 20px;
+                background: #f7fafc;
+                border-radius: 12px;
+                margin-bottom: 16px;
+              "
+            >
+              <div style="text-align: center; margin-bottom: 16px">
+                <div
+                  style="font-size: 48px; font-weight: 800; color: #667eea"
+                  id="probResult"
+                >
+                  --
+                </div>
+                <div style="font-size: 16px; color: #718096" id="probLabel">
+                  Probabilità OVER
+                </div>
+                <div
+                  style="
+                    font-size: 14px;
+                    margin-top: 8px;
+                    padding: 6px 12px;
+                    border-radius: 8px;
+                    display: inline-block;
+                  "
+                  id="confidenceBadge"
+                >
+                  --
+                </div>
+              </div>
+            </div>
+
+            <!-- Decision -->
+            <div
+              id="betDecision"
+              style="
+                padding: 24px;
+                border-radius: 12px;
+                margin-bottom: 16px;
+                color: white;
+              "
+            >
+              <div style="text-align: center">
+                <div
+                  style="font-size: 28px; font-weight: 800; margin-bottom: 12px"
+                  id="decisionTitle"
+                >
+                  --
+                </div>
+                <div
+                  style="font-size: 14px; margin-bottom: 20px; opacity: 0.95"
+                  id="decisionReason"
+                >
+                  --
+                </div>
+
+                <!-- Auto Stake Display -->
+                <div id="stakeDisplay" style="display: none">
+                  <div
+                    style="
+                      padding: 24px;
+                      background: rgba(255, 255, 255, 0.95);
+                      border-radius: 12px;
+                      margin-bottom: 16px;
+                      color: #2d3748;
+                    "
+                  >
+                    <div
+                      style="
+                        font-size: 14px;
+                        color: #718096;
+                        margin-bottom: 8px;
+                      "
+                    >
+                      💰 STAKE CALCOLATO AUTOMATICAMENTE
+                    </div>
+                    <div
+                      style="font-size: 56px; font-weight: 800; color: #48bb78"
+                      id="autoStake"
+                    >
+                      --
+                    </div>
+                    <div
+                      style="font-size: 13px; color: #718096; margin-top: 8px"
+                      id="stakeInfo"
+                    >
+                      --
+                    </div>
+                  </div>
+
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: repeat(3, 1fr);
+                      gap: 12px;
+                      padding: 16px;
+                      background: rgba(255, 255, 255, 0.8);
+                      border-radius: 8px;
+                      color: #2d3748;
+                    "
+                  >
+                    <div style="text-align: center">
+                      <div style="font-size: 12px; color: #718096">Vincita</div>
+                      <div
+                        style="
+                          font-size: 22px;
+                          font-weight: 700;
+                          color: #48bb78;
+                        "
+                        id="potentialWin"
+                      >
+                        --
+                      </div>
+                    </div>
+                    <div style="text-align: center">
+                      <div style="font-size: 12px; color: #718096">ROI</div>
+                      <div
+                        style="
+                          font-size: 22px;
+                          font-weight: 700;
+                          color: #667eea;
+                        "
+                        id="potentialROI"
+                      >
+                        --
+                      </div>
+                    </div>
+                    <div style="text-align: center">
+                      <div style="font-size: 12px; color: #718096">
+                        % Bankroll
+                      </div>
+                      <div
+                        style="
+                          font-size: 22px;
+                          font-weight: 700;
+                          color: #764ba2;
+                        "
+                        id="stakePercentage"
+                      >
+                        --
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Confirm Button -->
+            <button
+              onclick="confirmAndAddEvent()"
+              id="btnConfirmEvent"
+              class="btn-primary-full"
+              style="
+                display: none;
+                background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+              "
+            >
+              ✅ CONFERMA E AGGIUNGI AL PROGETTO
+            </button>
+          </div>
+        </div>
+
+        <!-- EVENTS HISTORY -->
+        <div
+          id="eventsHistorySection"
+          style="display: none"
+          class="events-history"
+        >
+          <h3 style="margin-bottom: 16px">📋 Storico Eventi</h3>
+          <div id="eventsList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW PROJECT MODAL -->
+    <div id="newProjectModal" class="modal">
+      <div class="modal-content">
+        <h2 style="margin-bottom: 24px">Nuovo Progetto</h2>
+
+        <input
+          type="text"
+          id="projectName"
+          class="form-input"
+          placeholder="Nome progetto (es. Scalata Febbraio)"
+        />
+        <input
+          type="number"
+          id="projectBankroll"
+          class="form-input"
+          value="100"
+          placeholder="Bankroll iniziale (€)"
+        />
+        <input
+          type="number"
+          id="projectEvents"
+          class="form-input"
+          value="8"
+          placeholder="Numero eventi totali"
+        />
+        <input
+          type="number"
+          id="projectTarget"
+          class="form-input"
+          value="80"
+          placeholder="Profitto target (€)"
+        />
+
+        <div style="display: flex; gap: 12px">
+          <button
+            onclick="closeNewProjectModal()"
+            class="btn btn-secondary"
+            style="flex: 1"
+          >
+            Annulla
+          </button>
+          <button onclick="createNewProject()" class="btn" style="flex: 1">
+            Crea Progetto
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script>
+      // STATE
+      let currentUser = null;
+      let currentCSV = null;
+      let currentProbability = null;
+      let currentConfidence = null;
+      let currentPlayerName = null;
+      let currentThreshold = null;
+      let currentOdds = null;
+      let currentAutoStake = null;
+      let currentRecommended = false;
+      let activeProject = null;
+      let auth = null;
+      let db = null;
+      let firebaseEnabled = false;
+
+      // ============================================
+      // THEME MANAGEMENT
+      // ============================================
+
+      // Initialize theme on page load
+      function initTheme() {
+        const savedTheme = localStorage.getItem("theme") || "dark";
+        document.body.setAttribute("data-theme", savedTheme);
+        updateThemeButton(savedTheme);
+      }
+
+      // Toggle between dark and light theme
+      function toggleTheme() {
+        const currentTheme = document.body.getAttribute("data-theme") || "dark";
+        const newTheme = currentTheme === "dark" ? "light" : "dark";
+
+        document.body.setAttribute("data-theme", newTheme);
+        localStorage.setItem("theme", newTheme);
+        updateThemeButton(newTheme);
+      }
+
+      // Update theme button text and icon
+      function updateThemeButton(theme) {
+        const iconEl = document.getElementById("themeIcon");
+        const textEl = document.getElementById("themeText");
+
+        if (theme === "dark") {
+          iconEl.textContent = "🌙";
+          textEl.textContent = "Dark";
+        } else {
+          iconEl.textContent = "☀️";
+          textEl.textContent = "Light";
+        }
+      }
+
+      // Init theme immediately
+      initTheme();
+
+      // FIREBASE INIT
+      window.addEventListener("DOMContentLoaded", () => {
+        try {
+          if (
+            typeof firebase !== "undefined" &&
+            firebase.apps &&
+            firebase.apps.length > 0
+          ) {
+            auth = firebase.auth();
+            db = firebase.firestore();
+            firebaseEnabled = true;
+
+            auth.onAuthStateChanged((user) => {
+              currentUser = user;
+              if (user) {
+                onUserLoggedIn(user);
+              } else {
+                onUserLoggedOut();
+              }
+            });
+          }
+        } catch (error) {
+          console.log("Firebase not configured");
+        }
+      });
+
+      // AUTH
+      async function handleLogin() {
+        try {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await auth.signInWithPopup(provider);
+        } catch (error) {
+          alert("Errore login: " + error.message);
+        }
+      }
+
+      async function handleLogout() {
+        if (confirm("Sei sicuro?")) {
+          await auth.signOut();
+        }
+      }
+
+      function onUserLoggedIn(user) {
+        document.getElementById("loggedOutSection").style.display = "none";
+        document.getElementById("loggedInSection").style.display = "flex";
+        document.getElementById("loggedInSection").style.gap = "12px";
+        document.getElementById("loggedInSection").style.alignItems = "center";
+        document.getElementById("userName").innerText = user.displayName;
+        document.getElementById("userAvatar").src = user.photoURL;
+        showDashboard();
+        loadUserProjects();
+      }
+
+      function onUserLoggedOut() {
+        document.getElementById("loggedOutSection").style.display = "block";
+        document.getElementById("loggedInSection").style.display = "none";
+        showPredictor();
+      }
+
+      // VIEWS
+      function showDashboard() {
+        document
+          .querySelectorAll(".view")
+          .forEach((v) => v.classList.remove("active"));
+        document.getElementById("dashboardView").classList.add("active");
+        loadUserProjects();
+      }
+
+      function showPredictor() {
+        document
+          .querySelectorAll(".view")
+          .forEach((v) => v.classList.remove("active"));
+        document.getElementById("predictorView").classList.add("active");
+        updateActiveProjectBanner();
+        updateEventsHistory();
+      }
+
+      // ============================================================
+      // AUTOCOMPLETE GIOCATORI
+      // ============================================================
+
+      let searchTimeout = null;
+      let selectedSlug = null;
+      let highlightIdx = -1;
+
+      function onPlayerSearch(query) {
+        selectedSlug = null;
+        clearTimeout(searchTimeout);
+        closeDropdown();
+
+        if (query.trim().length < 2) return;
+
+        searchTimeout = setTimeout(() => fetchSearchResults(query.trim()), 200);
+      }
+
+      async function fetchSearchResults(query) {
+        try {
+          const res = await fetch("/search_players", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query }),
+          });
+          const data = await res.json();
+          renderDropdown(data.results || []);
+        } catch (e) {
+          console.error("Errore ricerca:", e);
+        }
+      }
+
+      function renderDropdown(results) {
+        const dropdown = document.getElementById("searchDropdown");
+        highlightIdx = -1;
+
+        if (!results.length) {
+          closeDropdown();
+          return;
+        }
+
+        dropdown.innerHTML = results
+          .map(
+            (r, i) => `
+          <div
+            class="search-item"
+            data-idx="${i}"
+            data-slug="${r.slug}"
+            data-name="${r.name}"
+            onclick="selectPlayer('${r.slug}', '${r.name}')"
+            onmouseover="highlightItem(${i})"
+            style="padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 14px; display: flex; justify-content: space-between; align-items: center;"
+          >
+            <span>🏀 ${r.name}</span>
+            <span style="font-size: 11px; color: #a0aec0; font-family: monospace;">${r.slug}</span>
+          </div>
+        `,
+          )
+          .join("");
+
+        dropdown.style.display = "block";
+      }
+
+      function highlightItem(idx) {
+        document.querySelectorAll(".search-item").forEach((el, i) => {
+          el.style.background = i === idx ? "var(--bg-card-hover)" : "";
+        });
+        highlightIdx = idx;
+      }
+
+      function closeDropdown() {
+        const dd = document.getElementById("searchDropdown");
+        if (dd) dd.style.display = "none";
+        highlightIdx = -1;
+      }
+
+      function onSearchKeyDown(e) {
+        const items = document.querySelectorAll(".search-item");
+        if (!items.length) return;
+
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          highlightIdx = Math.min(highlightIdx + 1, items.length - 1);
+          items.forEach(
+            (el, i) =>
+              (el.style.background =
+                i === highlightIdx ? "var(--bg-card-hover)" : ""),
+          );
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          highlightIdx = Math.max(highlightIdx - 1, 0);
+          items.forEach(
+            (el, i) =>
+              (el.style.background =
+                i === highlightIdx ? "var(--bg-card-hover)" : ""),
+          );
+        } else if (e.key === "Enter" && highlightIdx >= 0) {
+          e.preventDefault();
+          const item = items[highlightIdx];
+          selectPlayer(item.dataset.slug, item.dataset.name);
+        } else if (e.key === "Escape") {
+          closeDropdown();
+        }
+      }
+
+      // Chiude dropdown cliccando fuori
+      document.addEventListener("click", (e) => {
+        if (
+          !e.target.closest("#playerSearchInput") &&
+          !e.target.closest("#searchDropdown")
+        ) {
+          closeDropdown();
+        }
+      });
+
+      async function selectPlayer(slug, name) {
+        closeDropdown();
+        selectedSlug = slug;
+        document.getElementById("playerSearchInput").value = name;
+
+        // Reset stato precedente
+        currentCSV = null;
+        currentPlayerName = null;
+        document.getElementById("playerLoadedMsg").style.display = "none";
+        document.getElementById("btnAnalyze").disabled = true;
+        document.getElementById("analysisResult").style.display = "none";
+        hideError();
+
+        // Mostra spinner
+        const statusEl = document.getElementById("playerSearchStatus");
+        statusEl.style.display = "block";
+        statusEl.style.background = "#bee3f8";
+        statusEl.style.color = "#2c5282";
+        statusEl.style.padding = "10px 14px";
+        statusEl.style.borderRadius = "8px";
+        statusEl.style.fontSize = "14px";
+        statusEl.innerHTML = `⏳ Scaricando dati di <strong>${name}</strong> da Basketball Reference...`;
+
+        try {
+          const res = await fetch("/fetch_player_csv", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ slug, season: "2026" }),
+          });
+
+          const data = await res.json();
+
+          if (data.error) {
+            statusEl.style.background = "#fed7d7";
+            statusEl.style.color = "#742a2a";
+            // Messaggio più chiaro per il 403
+            const is403 =
+              data.error.includes("403") || data.error.includes("bloccato");
+            statusEl.innerHTML = is403
+              ? `❌ Basketball Reference ha bloccato la richiesta.<br><small>Riprova tra qualche secondo, oppure usa il CSV manuale qui sotto.</small>`
+              : `❌ ${data.error}`;
+            return;
+          }
+
+          // Successo
+          currentCSV = data.csv;
+          currentPlayerName = data.player_name;
+
+          statusEl.style.display = "none";
+
+          const msgEl = document.getElementById("playerLoadedMsg");
+          msgEl.innerText = `✅ ${data.player_name} — ${data.games} partite caricate (stagione ${data.season})`;
+          msgEl.style.display = "block";
+
+          document.getElementById("btnAnalyze").disabled = false;
+        } catch (err) {
+          statusEl.style.background = "#fed7d7";
+          statusEl.style.color = "#742a2a";
+          statusEl.innerHTML = `❌ Errore di rete: ${err.message}`;
+        }
+      }
+
+      // PROJECTS
+      async function loadUserProjects() {
+        if (!currentUser) return;
+
+        try {
+          const snapshot = await db
+            .collection("users")
+            .doc(currentUser.uid)
+            .collection("projects")
+            .orderBy("created_at", "desc")
+            .get();
+
+          const projects = [];
+          snapshot.forEach((doc) => {
+            projects.push({ id: doc.id, ...doc.data() });
+          });
+
+          displayProjects(projects);
+        } catch (error) {
+          console.error("Error loading projects:", error);
+        }
+      }
+
+      function displayProjects(projects) {
+        const grid = document.getElementById("projectsGrid");
+
+        if (projects.length === 0) {
+          grid.innerHTML =
+            '<div style="color: white; text-align: center; padding: 40px; grid-column: 1/-1;">Nessun progetto. Creane uno!</div>';
+          return;
+        }
+
+        grid.innerHTML = projects
+          .map((p) => {
+            const profit = p.bankroll_current - p.bankroll_initial;
+            const progress = (p.events_played / p.total_events) * 100;
+
+            return `
+          <div class="project-card ${p.status}">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+              <h3 style="font-size: 18px; font-weight: 700; cursor: pointer;" onclick="selectProject('${p.id}')">${p.name}</h3>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <span style="padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; ${
+                  p.status === "active"
+                    ? "background: #c6f6d5; color: #22543d;"
+                    : p.status === "completed"
+                      ? "background: #bee3f8; color: #2c5282;"
+                      : "background: #fed7d7; color: #742a2a;"
+                }">
+                  ${p.status === "active" ? "🟢 Attivo" : p.status === "completed" ? "✅ Completato" : "❌ Fallito"}
+                </span>
+                <button 
+                  onclick="event.stopPropagation(); deleteProject('${p.id}')" 
+                  style="background: #f56565; color: white; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 12px; font-weight: 600;"
+                  title="Elimina progetto"
+                >
+                  🗑️
+                </button>
+              </div>
+            </div>
+            
+            <div onclick="selectProject('${p.id}')" style="cursor: pointer;">
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px;">
+                <div style="text-align: center; padding: 12px; background: #f7fafc; border-radius: 8px;">
+                  <div style="font-size: 20px; font-weight: 700; color: ${profit >= 0 ? "#48bb78" : "#f56565"}">
+                    ${profit >= 0 ? "+" : ""}${profit.toFixed(2)}€
+                  </div>
+                  <div style="font-size: 11px; color: #718096;">Profitto</div>
+                </div>
+                <div style="text-align: center; padding: 12px; background: #f7fafc; border-radius: 8px;">
+                  <div style="font-size: 20px; font-weight: 700;">${p.bankroll_current.toFixed(2)}€</div>
+                  <div style="font-size: 11px; color: #718096;">Bankroll</div>
+                </div>
+              </div>
+              
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; font-size: 13px; color: #718096;">
+                <div>Eventi: ${p.events_played}/${p.total_events}</div>
+                <div>Vinte: ${p.events_won}</div>
+                <div>Perse: ${p.events_lost}</div>
+              </div>
+              
+              <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-bottom: 12px;">
+                <div style="width: ${progress}%; height: 100%; background: linear-gradient(90deg, #48bb78, #38a169);"></div>
+              </div>
+              
+              ${
+                p.min_win_rate
+                  ? `
+              <div style="padding: 10px 14px; background: ${p.min_win_rate >= 85 ? "#feebc8" : p.min_win_rate >= 70 ? "#bee3f8" : "#c6f6d5"}; border-radius: 8px; font-size: 12px; color: ${p.min_win_rate >= 85 ? "#7c2d12" : p.min_win_rate >= 70 ? "#2c5282" : "#22543d"};">
+                📊 <strong>Target info:</strong> Per +${p.target_profit}€ servono ~${p.wins_needed}/${p.total_events} vittorie (~${p.min_win_rate}% win rate) | ROI: ${p.target_roi}%
+              </div>
+              `
+                  : ""
+              }
+            </div>
+          </div>
+        `;
+          })
+          .join("");
+      }
+
+      async function selectProject(projectId) {
+        try {
+          const doc = await db
+            .collection("users")
+            .doc(currentUser.uid)
+            .collection("projects")
+            .doc(projectId)
+            .get();
+
+          activeProject = { id: doc.id, ...doc.data() };
+          showPredictor();
+        } catch (error) {
+          alert("Errore caricamento progetto: " + error.message);
+        }
+      }
+
+      function openNewProjectModal() {
+        document.getElementById("newProjectModal").classList.add("active");
+      }
+
+      function closeNewProjectModal() {
+        document.getElementById("newProjectModal").classList.remove("active");
+      }
+
+      async function createNewProject() {
+        const name =
+          document.getElementById("projectName").value || "Nuovo Progetto";
+        const bankroll = parseFloat(
+          document.getElementById("projectBankroll").value,
+        );
+        const events = parseInt(document.getElementById("projectEvents").value);
+        const target = parseFloat(
+          document.getElementById("projectTarget").value,
+        );
+
+        if (!bankroll || !events || !target) {
+          alert("Compila tutti i campi!");
+          return;
+        }
+
+        // Calculate minimum win rate needed (realistic with compounding)
+        const targetROI = (target / bankroll) * 100; // 80%
+        const avgOdds = 1.85;
+
+        // Realistic calculation considering compounding
+        // Each win gives ~8-10% profit on current bankroll
+        // Formula empirica basata su simulazioni
+        let estimatedWinsNeeded;
+        let minWinRate;
+
+        if (targetROI <= 30) {
+          // Low target: ~50% win rate
+          estimatedWinsNeeded = Math.ceil(events * 0.5);
+          minWinRate = 50;
+        } else if (targetROI <= 50) {
+          // Medium target: ~60-65% win rate
+          estimatedWinsNeeded = Math.ceil(events * 0.65);
+          minWinRate = 65;
+        } else if (targetROI <= 70) {
+          // High target: ~70-75% win rate
+          estimatedWinsNeeded = Math.ceil(events * 0.75);
+          minWinRate = 75;
+        } else if (targetROI <= 100) {
+          // Very high target: ~80-85% win rate
+          estimatedWinsNeeded = Math.ceil(events * 0.85);
+          minWinRate = 85;
+        } else {
+          // Extreme target: ~90%+ win rate
+          estimatedWinsNeeded = Math.ceil(events * 0.92);
+          minWinRate = 92;
+        }
+
+        // Warning if target is unrealistic
+        if (targetROI > 150) {
+          if (
+            !confirm(
+              `⚠️ ATTENZIONE: Target estremamente ambizioso!\n\nTarget: +${target}€ (${targetROI.toFixed(0)}% ROI)\n\nPer raggiungere questo target con ${events} eventi servirebbe un win rate superiore al 95%.\n\n❌ Questo è quasi impossibile!\n\nConsiglio forte: Riduci il target a +${(bankroll * 0.5).toFixed(0)}€ o meno.\n\nVuoi creare comunque il progetto?`,
+            )
+          ) {
+            return;
+          }
+        } else if (minWinRate >= 85) {
+          if (
+            !confirm(
+              `⚠️ Target molto ambizioso!\n\nPer raggiungere +${target}€ (${targetROI.toFixed(0)}% ROI) serve:\n- Vincere almeno ${estimatedWinsNeeded} eventi su ${events}\n- Win rate stimato: ~${minWinRate}%\n\nQuesto richiede selezione molto accurata delle scommesse.\n\n💡 Consiglio: target più realistico = +${(bankroll * 0.4).toFixed(0)}€ (win rate ~60%)\n\nVuoi continuare?`,
+            )
+          ) {
+            return;
+          }
+        } else if (minWinRate >= 70) {
+          if (
+            !confirm(
+              `⚠️ Target ambizioso!\n\nPer raggiungere +${target}€ (${targetROI.toFixed(0)}% ROI) serve:\n- Vincere circa ${estimatedWinsNeeded} eventi su ${events}\n- Win rate stimato: ~${minWinRate}%\n\nRichiede buona selezione delle scommesse.\n\nVuoi continuare?`,
+            )
+          ) {
+            return;
+          }
+        }
+
+        try {
+          await db
+            .collection("users")
+            .doc(currentUser.uid)
+            .collection("projects")
+            .add({
+              name,
+              bankroll_initial: bankroll,
+              bankroll_current: bankroll,
+              target_profit: target,
+              total_events: events,
+              events_played: 0,
+              events_won: 0,
+              events_lost: 0,
+              status: "active",
+              // Info statistiche target
+              target_roi: parseFloat(targetROI.toFixed(1)),
+              min_win_rate: minWinRate,
+              wins_needed: estimatedWinsNeeded,
+              created_at: firebase.firestore.FieldValue.serverTimestamp(),
+              updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+              events: [],
+            });
+
+          closeNewProjectModal();
+          loadUserProjects();
+          alert("✅ Progetto creato!");
+        } catch (error) {
+          alert("Errore: " + error.message);
+        }
+      }
+
+      async function deleteProject(projectId) {
+        if (
+          !confirm(
+            "⚠️ Sei sicuro di voler eliminare questo progetto?\n\nTutti i dati, eventi e statistiche verranno persi definitivamente!",
+          )
+        ) {
+          return;
+        }
+
+        try {
+          await db
+            .collection("users")
+            .doc(currentUser.uid)
+            .collection("projects")
+            .doc(projectId)
+            .delete();
+
+          alert("✅ Progetto eliminato con successo!");
+
+          // Se era il progetto attivo, resettalo
+          if (activeProject && activeProject.id === projectId) {
+            activeProject = null;
+            showDashboard();
+          } else {
+            loadUserProjects();
+          }
+        } catch (error) {
+          alert("❌ Errore eliminazione: " + error.message);
+        }
+      }
+
+      async function deleteActiveProject() {
+        if (!activeProject) return;
+
+        const projectName = activeProject.name;
+
+        if (
+          !confirm(
+            `⚠️ Sei sicuro di voler eliminare il progetto "${projectName}"?\n\nTutti i dati verranno persi definitivamente!`,
+          )
+        ) {
+          return;
+        }
+
+        try {
+          await db
+            .collection("users")
+            .doc(currentUser.uid)
+            .collection("projects")
+            .doc(activeProject.id)
+            .delete();
+
+          alert("✅ Progetto eliminato!");
+
+          activeProject = null;
+          showDashboard();
+        } catch (error) {
+          alert("❌ Errore: " + error.message);
+        }
+      }
+
+      // TARGET REACHABILITY CHECK
+      function checkTargetReachability(project) {
+        const profit = project.bankroll_current - project.bankroll_initial;
+        const targetRemaining = project.target_profit - profit;
+        const eventsRemaining = project.total_events - project.events_played;
+
+        if (eventsRemaining === 0)
+          return { reachable: false, reason: "no_events" };
+
+        // Assume average odds 1.85 and 100% win rate for remaining events
+        const avgOdds = 1.85;
+        const avgStake = project.bankroll_current / eventsRemaining;
+        const maxPossibleProfit = avgStake * (avgOdds - 1) * eventsRemaining;
+
+        const reachable = maxPossibleProfit >= targetRemaining;
+        const winRateNeeded =
+          eventsRemaining > 0
+            ? Math.ceil((targetRemaining / (avgStake * (avgOdds - 1))) * 100) /
+              100
+            : 0;
+
+        return {
+          reachable,
+          maxPossibleProfit,
+          targetRemaining,
+          eventsRemaining,
+          winRateNeeded,
+          reason: !reachable ? "mathematically_impossible" : "ok",
+        };
+      }
+
+      function updateActiveProjectBanner() {
+        const banner = document.getElementById("activeProjectBanner");
+        const noProjectInfo = document.getElementById("noProjectInfo");
+
+        if (activeProject) {
+          const profit =
+            activeProject.bankroll_current - activeProject.bankroll_initial;
+
+          banner.style.display = "block";
+          noProjectInfo.style.display = "none";
+
+          document.getElementById("activeProjectName").innerText =
+            activeProject.name;
+          document.getElementById("activeBankroll").innerText =
+            activeProject.bankroll_current.toFixed(2) + "€";
+          document.getElementById("activeProgress").innerText =
+            `${activeProject.events_played}/${activeProject.total_events}`;
+          document.getElementById("activeProfit").innerText =
+            (profit >= 0 ? "+" : "") + profit.toFixed(2) + "€";
+          document.getElementById("activeTarget").innerText =
+            "+" + activeProject.target_profit + "€";
+
+          // Show target info if available
+          const targetInfoEl = document.getElementById("activeTargetInfo");
+          if (activeProject.min_win_rate && targetInfoEl) {
+            const color =
+              activeProject.min_win_rate >= 85
+                ? "#7c2d12"
+                : activeProject.min_win_rate >= 70
+                  ? "#2c5282"
+                  : "#22543d";
+            const bg =
+              activeProject.min_win_rate >= 85
+                ? "rgba(254,235,200,0.9)"
+                : activeProject.min_win_rate >= 70
+                  ? "rgba(190,227,248,0.9)"
+                  : "rgba(198,246,213,0.9)";
+            targetInfoEl.style.display = "block";
+            targetInfoEl.style.background = bg;
+            targetInfoEl.style.color = color;
+            targetInfoEl.innerHTML = `📊 <strong>Per raggiungere +${activeProject.target_profit}€</strong> servono ~${activeProject.wins_needed}/${activeProject.total_events} vittorie &nbsp;|&nbsp; Win rate necessario: ~${activeProject.min_win_rate}% &nbsp;|&nbsp; ROI target: ${activeProject.target_roi}%`;
+          }
+
+          // Check if target is still reachable
+          const reachability = checkTargetReachability(activeProject);
+
+          if (
+            !reachability.reachable &&
+            activeProject.events_played > 0 &&
+            activeProject.status === "active"
+          ) {
+            // Show warning if target impossible
+            const existingWarning = document.getElementById("targetWarning");
+            if (!existingWarning) {
+              const warning = document.createElement("div");
+              warning.id = "targetWarning";
+              warning.style.cssText =
+                "margin-top: 16px; padding: 16px; background: #fed7d7; color: #742a2a; border-radius: 8px; font-size: 14px;";
+              warning.innerHTML = `
+              <div style="font-weight: 700; margin-bottom: 8px;">⚠️ Target non più raggiungibile matematicamente</div>
+              <div style="font-size: 13px;">
+                Target rimanente: +${reachability.targetRemaining.toFixed(2)}€<br>
+                Profitto massimo possibile: +${reachability.maxPossibleProfit.toFixed(2)}€<br>
+                <br>
+                <strong>Strategia cambiata a "Damage Control":</strong><br>
+                - Stake ridotto per proteggere bankroll<br>
+                - Obiettivo: minimizzare perdite e recuperare quanto possibile
+              </div>
+            `;
+              banner.appendChild(warning);
+            }
+          }
+        } else {
+          banner.style.display = "none";
+          noProjectInfo.style.display = "block";
+        }
+      }
+
+      // CSV LOADING
+      function loadManualCsv() {
+        const csv = document.getElementById("manualCsv").value.trim();
+
+        if (!csv) {
+          showError("CSV vuoto!");
+          return;
+        }
+
+        const lines = csv.split("\n").filter((l) => l.trim());
+        if (lines.length < 2) {
+          showError("CSV non valido");
+          return;
+        }
+
+        currentCSV = csv;
+        currentPlayerName = "Giocatore";
+
+        document.getElementById("playerLoadedMsg").innerText =
+          `✅ CSV caricato: ${lines.length - 1} partite`;
+        document.getElementById("playerLoadedMsg").style.display = "block";
+        document.getElementById("btnAnalyze").disabled = false;
+        hideError();
+      }
+
+      // AUTOMATIC BET ANALYSIS
+      async function analyzeAutomaticBet() {
+        // RESET risultati analisi precedente
+        document.getElementById("analysisResult").style.display = "none";
+        document.getElementById("stakeDisplay").style.display = "none";
+        document.getElementById("btnConfirmEvent").style.display = "none";
+        currentProbability = null;
+        currentConfidence = null;
+        currentAutoStake = null;
+        currentRecommended = false;
+
+        const pointLine = parseFloat(
+          document.getElementById("pointLine").value,
+        );
+        const odds = parseFloat(document.getElementById("odds").value);
+
+        if (!currentCSV || !pointLine || !odds) {
+          showError("Inserisci CSV, soglia e quota!");
+          return;
+        }
+
+        if (!activeProject) {
+          showError("Seleziona un progetto prima!");
+          return;
+        }
+
+        // Loading state
+        const btnAnalyze = document.getElementById("btnAnalyze");
+        const originalText = btnAnalyze.innerText;
+        btnAnalyze.disabled = true;
+        btnAnalyze.innerText = "⏳ Analizzando...";
+
+        try {
+          // Step 1: Calculate Probability
+          const probResponse = await fetch("/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ csv: currentCSV, point_line: pointLine }),
+          });
+
+          const probData = await probResponse.json();
+
+          if (probData.error) {
+            showError(probData.error);
+            btnAnalyze.disabled = false;
+            btnAnalyze.innerText = originalText;
+            return;
+          }
+
+          currentProbability = probData.probability;
+          currentConfidence = probData.confidence;
+          currentThreshold = pointLine;
+          currentOdds = odds;
+
+          // Display probability
+          document.getElementById("probResult").innerText =
+            probData.over_pct.toFixed(1) + "%";
+          document.getElementById("probLabel").innerText =
+            `Sopra ${pointLine} punti`;
+
+          const confMap = {
+            high: {
+              text: "🟢 Alta affidabilità",
+              bg: "#c6f6d5",
+              color: "#22543d",
+            },
+            medium: {
+              text: "🟡 Media affidabilità",
+              bg: "#feebc8",
+              color: "#7c2d12",
+            },
+            low: {
+              text: "🔴 Bassa affidabilità",
+              bg: "#fed7d7",
+              color: "#742a2a",
+            },
+          };
+
+          const conf = confMap[probData.confidence] || confMap["medium"];
+          const badge = document.getElementById("confidenceBadge");
+          badge.innerText = conf.text;
+          badge.style.background = conf.bg;
+          badge.style.color = conf.color;
+
+          // Step 2: Check Target Reachability
+          const reachability = checkTargetReachability(activeProject);
+          const damageControlMode =
+            !reachability.reachable && activeProject.events_played > 0;
+
+          // Step 3: Calculate Automatic Stake
+          const bankroll = activeProject.bankroll_current;
+          const eventsRemaining =
+            activeProject.total_events - activeProject.events_played;
+          const currentProfit =
+            activeProject.bankroll_current - activeProject.bankroll_initial;
+          const targetRemaining = activeProject.target_profit - currentProfit;
+
+          // If damage control mode, use conservative target
+          const effectiveTarget = damageControlMode
+            ? Math.min(targetRemaining, reachability.maxPossibleProfit * 0.7)
+            : targetRemaining;
+
+          const betResponse = await fetch("/calculate_bet", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              bankroll,
+              target_profit: effectiveTarget,
+              total_events: eventsRemaining,
+              probability: currentProbability,
+              odds,
+              confidence: currentConfidence,
+            }),
+          });
+
+          const betData = await betResponse.json();
+
+          // Display results
+          document.getElementById("analysisResult").style.display = "block";
+
+          const decision = document.getElementById("betDecision");
+          const stakeDisplay = document.getElementById("stakeDisplay");
+          const confirmBtn = document.getElementById("btnConfirmEvent");
+
+          // Add damage control warning if needed
+          if (damageControlMode) {
+            const warningDiv = document.createElement("div");
+            warningDiv.style.cssText =
+              "padding: 12px; background: #fed7d7; color: #742a2a; border-radius: 8px; margin-bottom: 16px; font-size: 13px;";
+            warningDiv.innerHTML = `
+            <div style="font-weight: 700; margin-bottom: 6px;">⚠️ DAMAGE CONTROL MODE</div>
+            <div>
+              Target originale (+${activeProject.target_profit}€) non più raggiungibile.<br>
+              Profitto max possibile: +${reachability.maxPossibleProfit.toFixed(2)}€<br>
+              <strong>Stake ridotto per proteggere bankroll rimanente.</strong>
+            </div>
+          `;
+
+            const analysisContainer = document.getElementById("analysisResult");
+            const existingWarning = analysisContainer.querySelector(
+              "[data-damage-warning]",
+            );
+            if (existingWarning) {
+              existingWarning.remove();
+            }
+            warningDiv.setAttribute("data-damage-warning", "true");
+            analysisContainer.insertBefore(
+              warningDiv,
+              analysisContainer.firstChild,
+            );
+          }
+
+          if (betData.recommended) {
+            currentAutoStake = betData.stake;
+            currentRecommended = true;
+
+            decision.className = "bet-recommended";
+            document.getElementById("decisionTitle").innerText =
+              "✅ BET CONSIGLIATA";
+            document.getElementById("decisionReason").innerText =
+              betData.reason;
+
+            document.getElementById("autoStake").innerText =
+              betData.stake.toFixed(2) + "€";
+            document.getElementById("stakeInfo").innerText =
+              `${betData.stake_percentage}% del bankroll corrente (${bankroll.toFixed(2)}€) | ${eventsRemaining} eventi rimanenti`;
+
+            const potentialWin = betData.stake * (odds - 1);
+            const roi = (potentialWin / betData.stake) * 100;
+            const stakePerc = (betData.stake / bankroll) * 100;
+
+            document.getElementById("potentialWin").innerText =
+              "+" + potentialWin.toFixed(2) + "€";
+            document.getElementById("potentialROI").innerText =
+              roi.toFixed(1) + "%";
+            document.getElementById("stakePercentage").innerText =
+              stakePerc.toFixed(1) + "%";
+
+            stakeDisplay.style.display = "block";
+            confirmBtn.style.display = "block";
+          } else {
+            currentRecommended = false;
+
+            decision.className = "bet-not-recommended";
+            document.getElementById("decisionTitle").innerText =
+              "❌ BET SCONSIGLIATA";
+            document.getElementById("decisionReason").innerText =
+              betData.reason;
+
+            stakeDisplay.style.display = "none";
+            confirmBtn.style.display = "none";
+          }
+
+          // Re-enable button
+          btnAnalyze.disabled = false;
+          btnAnalyze.innerText = originalText;
+        } catch (error) {
+          showError("Errore: " + error.message);
+
+          // Re-enable button on error
+          btnAnalyze.disabled = false;
+          btnAnalyze.innerText = originalText;
+        }
+      }
+
+      // CONFIRM AND ADD EVENT
+      async function confirmAndAddEvent() {
+        if (!activeProject || !currentAutoStake || !currentRecommended) {
+          alert("Dati mancanti!");
+          return;
+        }
+
+        const event = {
+          id: Date.now().toString(),
+          player: currentPlayerName,
+          threshold: currentThreshold,
+          probability: currentProbability,
+          odds: currentOdds,
+          stake: currentAutoStake,
+          potential_profit: currentAutoStake * (currentOdds - 1),
+          result: "pending",
+          date_added: new Date(),
+          date_resolved: null,
+          notes: `Prob: ${(currentProbability * 100).toFixed(1)}%, Confidence: ${currentConfidence}, STAKE AUTO`,
+        };
+
+        try {
+          await db
+            .collection("users")
+            .doc(currentUser.uid)
+            .collection("projects")
+            .doc(activeProject.id)
+            .update({
+              events: firebase.firestore.FieldValue.arrayUnion(event),
+              updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+
+          alert("✅ Evento aggiunto al progetto!");
+
+          // Reload project
+          const doc = await db
+            .collection("users")
+            .doc(currentUser.uid)
+            .collection("projects")
+            .doc(activeProject.id)
+            .get();
+          activeProject = { id: doc.id, ...doc.data() };
+
+          // Reset form
+          document.getElementById("analysisResult").style.display = "none";
+          document.getElementById("pointLine").value = "";
+          document.getElementById("manualCsv").value = "";
+          document.getElementById("playerLoadedMsg").style.display = "none";
+          document.getElementById("btnAnalyze").disabled = true;
+
+          currentCSV = null;
+          currentProbability = null;
+          currentAutoStake = null;
+
+          updateActiveProjectBanner();
+          updateEventsHistory();
+        } catch (error) {
+          alert("Errore: " + error.message);
+        }
+      }
+
+      // EVENTS HISTORY
+      function updateEventsHistory() {
+        if (
+          !activeProject ||
+          !activeProject.events ||
+          activeProject.events.length === 0
+        ) {
+          document.getElementById("eventsHistorySection").style.display =
+            "none";
+          return;
+        }
+
+        document.getElementById("eventsHistorySection").style.display = "block";
+
+        const eventsList = document.getElementById("eventsList");
+        eventsList.innerHTML = activeProject.events
+          .map(
+            (event, idx) => `
+        <div class="event-item event-${event.result}">
+          <div style="flex: 1;">
+            <div style="font-weight: 700; margin-bottom: 4px;">
+              ${event.player} > ${event.threshold} pts
+              ${event.result === "pending" ? "⏳ Pending" : event.result === "won" ? "✅ Vinta" : "❌ Persa"}
+            </div>
+            <div style="font-size: 13px; color: #718096;">
+              Stake: ${event.stake.toFixed(2)}€ | Quota: ${event.odds} | Prob: ${(event.probability * 100).toFixed(1)}%
+            </div>
+          </div>
+          ${
+            event.result === "pending"
+              ? `
+            <div style="display: flex; gap: 8px;">
+              <button onclick="markEventResult('${event.id}', 'won')" class="btn" style="padding: 8px 16px; background: #48bb78;">
+                Vinta
+              </button>
+              <button onclick="markEventResult('${event.id}', 'lost')" class="btn" style="padding: 8px 16px; background: #f56565;">
+                Persa
+              </button>
+            </div>
+          `
+              : ""
+          }
+        </div>
+      `,
+          )
+          .join("");
+      }
+
+      async function markEventResult(eventId, result) {
+        if (!activeProject) return;
+
+        try {
+          const eventIndex = activeProject.events.findIndex(
+            (e) => e.id === eventId,
+          );
+          if (eventIndex === -1) return;
+
+          const event = activeProject.events[eventIndex];
+          event.result = result;
+          event.date_resolved = new Date();
+
+          let newBankroll = activeProject.bankroll_current;
+          if (result === "won") {
+            newBankroll += event.potential_profit;
+            activeProject.events_won += 1;
+          } else {
+            newBankroll -= event.stake;
+            activeProject.events_lost += 1;
+          }
+
+          activeProject.events_played += 1;
+          activeProject.bankroll_current = newBankroll;
+
+          // Check status
+          const totalProfit = newBankroll - activeProject.bankroll_initial;
+          if (activeProject.events_played >= activeProject.total_events) {
+            activeProject.status =
+              totalProfit >= activeProject.target_profit
+                ? "completed"
+                : "failed";
+          } else if (totalProfit >= activeProject.target_profit) {
+            activeProject.status = "completed";
+          } else if (newBankroll <= activeProject.bankroll_initial * 0.3) {
+            activeProject.status = "failed";
+          }
+
+          // Update DB
+          await db
+            .collection("users")
+            .doc(currentUser.uid)
+            .collection("projects")
+            .doc(activeProject.id)
+            .update({
+              events: activeProject.events,
+              bankroll_current: newBankroll,
+              events_played: activeProject.events_played,
+              events_won: activeProject.events_won,
+              events_lost: activeProject.events_lost,
+              status: activeProject.status,
+              updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+
+          alert(result === "won" ? "✅ Evento vinto!" : "❌ Evento perso");
+
+          updateActiveProjectBanner();
+          updateEventsHistory();
+        } catch (error) {
+          alert("Errore: " + error.message);
+        }
+      }
+
+      // HELPERS
+      function showError(msg) {
+        document.getElementById("errorMsg").innerText = msg;
+        document.getElementById("errorMsg").style.display = "block";
+        setTimeout(() => {
+          document.getElementById("errorMsg").style.display = "none";
+        }, 5000);
+      }
+
+      function hideError() {
+        document.getElementById("errorMsg").style.display = "none";
+      }
+      // ============================================
+      // PWA — Registrazione Service Worker
+      // ============================================
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/service-worker.js")
+            .then((reg) =>
+              console.log("[PWA] Service Worker registrato ✅", reg.scope),
+            )
+            .catch((err) => console.warn("[PWA] Registrazione fallita:", err));
+        });
+      }
+    </script>
+  </body>
+</html>
