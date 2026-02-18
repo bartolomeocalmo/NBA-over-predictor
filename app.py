@@ -538,6 +538,18 @@ def calculate_bet():
         return jsonify({"error": f"Errore: {str(e)}"}), 500
 
 
+@app.route("/terms.html")
+def serve_terms():
+    return send_from_directory(FRONTEND_PATH, 'terms.html')
+
+@app.route("/privacy.html")
+def serve_privacy():
+    return send_from_directory(FRONTEND_PATH, 'privacy.html')
+
+@app.route("/cookie.html")
+def serve_cookie():
+    return send_from_directory(FRONTEND_PATH, 'cookie.html')
+
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({
