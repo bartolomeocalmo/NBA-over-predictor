@@ -2,7 +2,7 @@
 // NBA Over Predictor — Service Worker PWA
 // ============================================
 
-const CACHE_NAME = "nba-predictor-v1";
+const CACHE_NAME = "nba-predictor-v2";
 
 // File da cachare per funzionamento offline
 const STATIC_ASSETS = [

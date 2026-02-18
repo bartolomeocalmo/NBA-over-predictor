@@ -135,9 +135,17 @@ if (typeof firebase !== "undefined" && !firebase.apps.length) {{
     return response
 
 
+@app.route("/logo.png")
+def serve_logo():
+    return send_from_directory(FRONTEND_PATH, 'logo.png')
+
+
 @app.route("/manifest.json")
 def serve_manifest():
     return send_from_directory(FRONTEND_PATH, 'manifest.json')
+
+
+
 
 
 @app.route("/service-worker.js")
