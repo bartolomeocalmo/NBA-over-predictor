@@ -671,36 +671,205 @@
          RESPONSIVE
          ============================================ */
 
+      /* Tablet */
       @media (max-width: 768px) {
+        body {
+          padding: 12px;
+        }
+
         .header {
           flex-direction: column;
-          gap: var(--space-md);
+          align-items: flex-start;
+          gap: var(--space-sm);
+          padding: var(--space-md);
+          margin-bottom: 12px;
+        }
+
+        .user-section {
+          width: 100%;
+          justify-content: flex-end;
+        }
+
+        .logo img {
+          height: 36px;
+        }
+
+        .container {
+          padding: var(--space-lg);
+          border-radius: var(--radius-md);
         }
 
         .active-project-stats {
           grid-template-columns: repeat(2, 1fr);
+          gap: var(--space-sm);
+        }
+
+        .active-project-stat-value {
+          font-size: 20px;
         }
 
         .projects-grid {
           grid-template-columns: 1fr;
         }
 
-        .container {
+        .dashboard-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: var(--space-sm);
+        }
+
+        .dashboard-title {
+          font-size: 22px;
+        }
+
+        .event-item {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: var(--space-xs);
+        }
+
+        .next-bet-value {
+          font-size: 28px;
+        }
+
+        .modal-content {
           padding: var(--space-lg);
+          width: 95%;
         }
       }
 
+      /* iPhone */
       @media (max-width: 480px) {
         body {
-          padding: 12px;
+          padding: 8px;
         }
 
         .header {
+          padding: var(--space-sm) var(--space-md);
+          border-radius: var(--radius-md);
+        }
+
+        .logo img {
+          height: 28px;
+        }
+
+        .user-avatar {
+          width: 32px;
+          height: 32px;
+        }
+
+        .btn {
+          padding: 10px 12px;
+          font-size: 13px;
+        }
+
+        .container {
+          padding: var(--space-md);
+          border-radius: var(--radius-sm);
+        }
+
+        .dashboard-title {
+          font-size: 18px;
+        }
+
+        .active-project-banner {
+          padding: var(--space-md);
+        }
+        .active-project-banner h3 {
+          font-size: 15px;
+        }
+
+        .active-project-stats {
+          grid-template-columns: repeat(2, 1fr);
+          gap: var(--space-xs);
+        }
+
+        .active-project-stat-value {
+          font-size: 18px;
+        }
+        .active-project-stat-label {
+          font-size: 10px;
+        }
+
+        .project-card {
           padding: var(--space-md);
         }
 
-        .logo {
-          font-size: 20px;
+        .next-bet-box {
+          padding: var(--space-md);
+        }
+        .next-bet-value {
+          font-size: 22px;
+        }
+
+        .form-input {
+          font-size: 16px; /* evita zoom iOS */
+          padding: 10px 14px;
+        }
+
+        .btn-primary-full {
+          padding: 14px;
+          font-size: 15px;
+        }
+
+        .modal-content {
+          padding: var(--space-md);
+          width: 98%;
+          border-radius: var(--radius-md);
+        }
+
+        .events-history {
+          padding: var(--space-md);
+        }
+
+        .event-item {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: var(--space-xs);
+          padding: var(--space-sm);
+        }
+
+        .search-item {
+          padding: 14px 12px;
+          font-size: 15px;
+        }
+      }
+
+      /* iPhone SE */
+      @media (max-width: 375px) {
+        body {
+          padding: 6px;
+        }
+        .logo img {
+          height: 24px;
+        }
+        .active-project-stat-value {
+          font-size: 15px;
+        }
+        .container {
+          padding: var(--space-sm);
+        }
+        .next-bet-value {
+          font-size: 18px;
+        }
+        .btn {
+          padding: 8px 10px;
+          font-size: 12px;
+        }
+      }
+
+      /* Fix Safari iOS */
+      @supports (-webkit-touch-callout: none) {
+        .form-input,
+        textarea.form-input {
+          font-size: 16px;
+        }
+        .btn,
+        .btn-primary-full {
+          min-height: 44px;
+        }
+        .search-item {
+          min-height: 44px;
         }
       }
     </style>
