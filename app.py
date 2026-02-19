@@ -289,13 +289,28 @@ def fetch_player_csv():
     try:
         player_id = int(player_id)
 
-        # Scarica game log
-        log = playergamelog.PlayerGameLog(
-            player_id=player_id,
-            season=season_str,
-            timeout=30
-        )
-        df = log.get_data_frames()[0]
+        # Scarica game log con retry automatico (NBA API è instabile)
+        df = None
+        last_error = None
+        for attempt in range(3):
+            try:
+                if attempt > 0:
+                    time.sleep(2 * attempt)  # 2s, 4s tra i retry
+                    print(f"[nba_api] retry {attempt}/2 per player_id={player_id}")
+                log = playergamelog.PlayerGameLog(
+                    player_id=player_id,
+                    season=season_str,
+                    timeout=15 + (attempt * 10)  # 15s, 25s, 35s
+                )
+                df = log.get_data_frames()[0]
+                break  # successo, esci dal loop
+            except Exception as e:
+                last_error = e
+                print(f"[nba_api] tentativo {attempt+1} fallito: {e}")
+                continue
+
+        if df is None:
+            return jsonify({"error": f"NBA API non raggiungibile dopo 3 tentativi. Usa il CSV manuale. ({str(last_error)[:80]})"}), 503
 
         if df.empty:
             return jsonify({"error": f"Nessuna partita trovata per {player_name} nella stagione {season_str}"}), 404
@@ -620,5 +635,3 @@ if __name__ == "__main__":
     print("  ✅ APRI IL BROWSER SU: http://127.0.0.1:5000/")
     print("=" * 70)
     print("\n")
-
-    app.run(debug=True)
