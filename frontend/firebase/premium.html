@@ -11,8 +11,21 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="/firebase-config.js"></script>
-    <!-- PayPal SDK — sostituisci YOUR_PAYPAL_CLIENT_ID con quello reale -->
-    <script src="https://www.paypal.com/sdk/js?client-id=YOUR_PAYPAL_CLIENT_ID&currency=EUR&locale=it_IT"></script>
+    <!-- PayPal SDK caricato dinamicamente per non esporre il client ID nel codice -->
+    <script>
+      fetch("/config/paypal-client-id")
+        .then((r) => r.json())
+        .then((data) => {
+          if (!data.client_id) return;
+          const script = document.createElement("script");
+          script.src = `https://www.paypal.com/sdk/js?client-id=${data.client_id}&currency=EUR&locale=it_IT`;
+          script.onload = () => {
+            window.paypalReady = true;
+          };
+          document.head.appendChild(script);
+        })
+        .catch(() => {});
+    </script>
     <style>
       * {
         box-sizing: border-box;
@@ -569,8 +582,15 @@
       function initPayPalButton() {
         if (paypalInited) return;
         if (typeof paypal === "undefined") {
-          document.getElementById("paypal-button-container").innerHTML =
-            '<p style="color:#555;font-size:13px;text-align:center;">PayPal non disponibile al momento.</p>';
+          // SDK ancora in caricamento — riprova ogni secondo fino a 10 volte
+          if (!window.paypalRetries) window.paypalRetries = 0;
+          if (window.paypalRetries < 10) {
+            window.paypalRetries++;
+            setTimeout(initPayPalButton, 1000);
+          } else {
+            document.getElementById("paypal-button-container").innerHTML =
+              '<p style="color:#555;font-size:13px;text-align:center;">PayPal non disponibile al momento.</p>';
+          }
           return;
         }
         paypalInited = true;

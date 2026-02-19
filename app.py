@@ -572,6 +572,12 @@ def serve_privacy():
 def serve_cookie():
     return send_from_directory(FRONTEND_PATH, 'cookie.html')
 
+@app.route("/config/paypal-client-id")
+def paypal_client_id():
+    """Espone il PayPal Client ID al frontend in modo sicuro (non va su git)."""
+    client_id = os.environ.get("PAYPAL_CLIENT_ID", "")
+    return jsonify({"client_id": client_id})
+
 @app.route("/premium.html")
 def serve_premium():
     return send_from_directory(FRONTEND_PATH, 'premium.html')
