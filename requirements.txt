@@ -8,3 +8,5 @@ beautifulsoup4>=4.12.0
 requests>=2.31.0
 gunicorn>=21.0.0
 nba_api>=1.4.0
+stripe>=7.0.0
+firebase-admin>=6.0.0
