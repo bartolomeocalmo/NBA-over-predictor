@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="it">
+<html lang="it" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,11 +9,101 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/guida-csv.css" />
+    <script>
+      // Applica tema subito per evitare flash
+      (function () {
+        var t = localStorage.getItem("theme") || "dark";
+        document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
+    <style>
+      /* Variabili tema per elementi inline */
+      :root {
+        --bg-card: #1a1a1a;
+        --bg-btn: #2a2a2a;
+        --border-inline: #2a2a2a;
+        --text-primary: #f5f5f5;
+        --text-secondary: #a0a0a0;
+        --ph-bg: #242424;
+        --ph-border: #333;
+        --ph-code-bg: #1a1a1a;
+        --ph-code-color: #79c0ff;
+        --ph-label: #555;
+        --ph-hint: #444;
+      }
+      [data-theme="light"] {
+        --bg-card: #ffffff;
+        --bg-btn: #f3f4f6;
+        --border-inline: #e5e7eb;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --ph-bg: #f3f4f6;
+        --ph-border: #d1d5db;
+        --ph-code-bg: #e5e7eb;
+        --ph-code-color: #2563eb;
+        --ph-label: #9ca3af;
+        --ph-hint: #6b7280;
+      }
+
+      /* Applica variabili ai placeholder inline */
+      [data-theme="light"] [id^="ph"] {
+        background: var(--ph-bg) !important;
+        border-color: var(--ph-border) !important;
+      }
+      [data-theme="light"] [id^="ph"] code {
+        background: var(--ph-code-bg) !important;
+        color: var(--ph-code-color) !important;
+      }
+      [data-theme="light"] [id^="ph"] span[style*="color: #555"] {
+        color: var(--ph-label) !important;
+      }
+      [data-theme="light"] [id^="ph"] span[style*="color: #444"] {
+        color: var(--ph-hint) !important;
+      }
+
+      /* Note finali */
+      [data-theme="light"] .note-box {
+        background: var(--bg-card) !important;
+        border-color: var(--border-inline) !important;
+      }
+      [data-theme="light"] .note-box [style*="color: #f5f5f5"] {
+        color: var(--text-primary) !important;
+      }
+      [data-theme="light"] .note-box [style*="color: #a0a0a0"] {
+        color: var(--text-secondary) !important;
+      }
+
+      /* Theme toggle button */
+      .theme-toggle {
+        padding: 8px 14px;
+        background: var(--bg-btn);
+        color: var(--text-primary);
+        border: 1px solid var(--ph-border);
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: "Inter", sans-serif;
+        transition: opacity 0.2s;
+      }
+      .theme-toggle:hover {
+        opacity: 0.8;
+      }
+    </style>
   </head>
   <body>
     <div class="header">
       <img src="logo.png" alt="NBA Over Predictor" />
-      <a href="/" class="back-btn">← Torna all'app</a>
+      <div style="display: flex; align-items: center; gap: 10px">
+        <button onclick="toggleTheme()" class="theme-toggle">
+          <span id="themeIcon">🌙</span>
+          <span id="themeText">Dark</span>
+        </button>
+        <a href="/" class="back-btn">← Torna all'app</a>
+      </div>
     </div>
 
     <div class="container">
@@ -489,6 +579,7 @@
 
       <!-- NOTE FINALI -->
       <div
+        class="note-box"
         style="
           margin-top: 32px;
           padding: 20px 24px;
@@ -537,5 +628,28 @@
         <a href="/cookie.html">Cookie Policy</a>
       </p>
     </footer>
+
+    <script>
+      function toggleTheme() {
+        var cur = document.documentElement.getAttribute("data-theme") || "dark";
+        var next = cur === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+        document.body.setAttribute("data-theme", next);
+        localStorage.setItem("theme", next);
+        document.getElementById("themeIcon").textContent =
+          next === "dark" ? "🌙" : "☀️";
+        document.getElementById("themeText").textContent =
+          next === "dark" ? "Dark" : "Light";
+      }
+      window.addEventListener("DOMContentLoaded", function () {
+        var saved = localStorage.getItem("theme") || "dark";
+        document.documentElement.setAttribute("data-theme", saved);
+        document.body.setAttribute("data-theme", saved);
+        document.getElementById("themeIcon").textContent =
+          saved === "dark" ? "🌙" : "☀️";
+        document.getElementById("themeText").textContent =
+          saved === "dark" ? "Dark" : "Light";
+      });
+    </script>
   </body>
 </html>
