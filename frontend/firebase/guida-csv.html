@@ -1,0 +1,855 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guida CSV — NBA Over Predictor</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          sans-serif;
+        background: #0f0f0f;
+        color: #f5f5f5;
+        min-height: 100vh;
+        padding: 20px;
+        line-height: 1.7;
+      }
+
+      /* ── HEADER ── */
+      .header {
+        max-width: 860px;
+        margin: 0 auto 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 24px;
+        background: #242424;
+        border-radius: 16px;
+        border: 1px solid #333;
+      }
+      .header img {
+        height: 38px;
+        width: auto;
+      }
+      .back-btn {
+        padding: 9px 18px;
+        background: #1e1e1e;
+        color: #f5f5f5;
+        border: 1px solid #333;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.2s;
+        white-space: nowrap;
+      }
+      .back-btn:hover {
+        background: #2a2a2a;
+      }
+
+      /* ── CONTAINER ── */
+      .container {
+        max-width: 860px;
+        margin: 0 auto;
+      }
+
+      /* ── HERO ── */
+      .hero {
+        background: linear-gradient(
+          135deg,
+          #1a1a2e 0%,
+          #16213e 50%,
+          #0f3460 100%
+        );
+        border-radius: 20px;
+        padding: 48px 40px;
+        margin-bottom: 32px;
+        border: 1px solid #1e3a5f;
+        position: relative;
+        overflow: hidden;
+      }
+      .hero::before {
+        content: "🏀";
+        position: absolute;
+        right: 32px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 80px;
+        opacity: 0.15;
+      }
+      .hero h1 {
+        font-size: 30px;
+        font-weight: 800;
+        margin-bottom: 10px;
+        color: #fff;
+      }
+      .hero p {
+        color: #93c5fd;
+        font-size: 16px;
+        max-width: 540px;
+      }
+
+      /* ── QUANDO USARLO ── */
+      .when-box {
+        background: rgba(59, 130, 246, 0.08);
+        border: 1px solid rgba(59, 130, 246, 0.25);
+        border-radius: 14px;
+        padding: 20px 24px;
+        margin-bottom: 32px;
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+      }
+      .when-box .icon {
+        font-size: 24px;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+      .when-box h3 {
+        font-size: 15px;
+        font-weight: 700;
+        color: #93c5fd;
+        margin-bottom: 8px;
+      }
+      .when-box ul {
+        color: #a0aec0;
+        font-size: 14px;
+        padding-left: 18px;
+      }
+      .when-box li {
+        margin-bottom: 4px;
+      }
+
+      /* ── STEPS ── */
+      .steps {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .step {
+        background: #1a1a1a;
+        border-radius: 16px;
+        border: 1px solid #2a2a2a;
+        overflow: hidden;
+        transition: border-color 0.2s;
+      }
+      .step:hover {
+        border-color: #3b82f6;
+      }
+
+      .step-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 20px 24px;
+      }
+
+      .step-number {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #3b82f6;
+        color: white;
+        font-size: 16px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .step-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: #f5f5f5;
+      }
+      .step-subtitle {
+        font-size: 13px;
+        color: #6b6b6b;
+        margin-top: 2px;
+      }
+
+      .step-body {
+        padding: 0 24px 24px;
+      }
+
+      .step-desc {
+        font-size: 14px;
+        color: #a0a0a0;
+        margin-bottom: 16px;
+        line-height: 1.8;
+      }
+
+      /* Screenshot placeholder */
+      .screenshot-slot {
+        width: 100%;
+        min-height: 200px;
+        background: #242424;
+        border: 2px dashed #333;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: #555;
+        font-size: 13px;
+        cursor: default;
+        margin-top: 4px;
+      }
+      .screenshot-slot .placeholder-icon {
+        font-size: 32px;
+        opacity: 0.5;
+      }
+      .screenshot-slot .placeholder-text {
+        font-weight: 600;
+      }
+      .screenshot-slot .placeholder-sub {
+        font-size: 12px;
+        color: #444;
+      }
+
+      /* Click path indicator */
+      .click-path {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 12px 0;
+      }
+      .click-item {
+        background: #2a2a2a;
+        border: 1px solid #3b82f6;
+        color: #93c5fd;
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .click-arrow {
+        color: #555;
+        font-size: 16px;
+      }
+
+      /* Code block */
+      .code-note {
+        background: #0d1117;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 14px 16px;
+        font-family: monospace;
+        font-size: 13px;
+        color: #79c0ff;
+        margin-top: 12px;
+        word-break: break-all;
+      }
+
+      /* ── TIP BOX ── */
+      .tip {
+        background: rgba(16, 185, 129, 0.08);
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin-top: 12px;
+        font-size: 13px;
+        color: #6ee7b7;
+        display: flex;
+        gap: 10px;
+      }
+      .tip strong {
+        color: #10b981;
+      }
+
+      .warning {
+        background: rgba(245, 158, 11, 0.08);
+        border: 1px solid rgba(245, 158, 11, 0.25);
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin-top: 12px;
+        font-size: 13px;
+        color: #fcd34d;
+      }
+      .warning strong {
+        color: #f59e0b;
+      }
+
+      /* ── FOOTER ── */
+      footer {
+        max-width: 860px;
+        margin: 40px auto 0;
+        text-align: center;
+        color: #555;
+        font-size: 13px;
+        padding: 20px 0;
+        border-top: 1px solid #222;
+      }
+      footer a {
+        color: #3b82f6;
+        text-decoration: none;
+      }
+
+      @media (max-width: 600px) {
+        .hero {
+          padding: 28px 20px;
+        }
+        .hero h1 {
+          font-size: 22px;
+        }
+        .hero::before {
+          display: none;
+        }
+        .step-header {
+          padding: 16px;
+        }
+        .step-body {
+          padding: 0 16px 16px;
+        }
+        .when-box {
+          flex-direction: column;
+          gap: 8px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <img src="/logo.png" alt="NBA Over Predictor" />
+      <a href="/" class="back-btn">← Torna all'app</a>
+    </div>
+
+    <div class="container">
+      <!-- HERO -->
+      <div class="hero">
+        <h1>📋 Come ottenere il CSV da<br />Basketball Reference</h1>
+        <p>
+          Segui questi passaggi per scaricare il game log di un giocatore e
+          incollarlo nell'app per l'analisi.
+        </p>
+      </div>
+
+      <!-- QUANDO USARLO -->
+      <div class="when-box">
+        <div class="icon">💡</div>
+        <div>
+          <h3>Quando usare il CSV manuale?</h3>
+          <ul>
+            <li>La ricerca automatica non trova il giocatore che cerchi</li>
+            <li>Vuoi usare un numero personalizzato di partite</li>
+            <li>La connessione al server è lenta o instabile</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- STEPS -->
+      <div class="steps">
+        <!-- STEP 1 -->
+        <div class="step">
+          <div class="step-header">
+            <div class="step-number">1</div>
+            <div>
+              <div class="step-title">Vai su Basketball Reference</div>
+              <div class="step-subtitle">Apri il sito nel browser</div>
+            </div>
+          </div>
+          <div class="step-body">
+            <p class="step-desc">
+              Apri il browser e vai su
+              <a
+                href="https://www.basketball-reference.com"
+                target="_blank"
+                style="color: #3b82f6"
+                >basketball-reference.com</a
+              >. È il database statistico NBA più completo e affidabile.
+            </p>
+            <div
+              class="screenshot-slot"
+              id="slot-step1"
+              style="
+                position: relative;
+                min-height: 60px;
+                display: block;
+                padding: 0;
+              "
+            >
+              <img
+                src="screenshots/step1.png"
+                alt="Step 1"
+                style="width: 100%; border-radius: 10px; display: block"
+                onerror="
+                  this.style.display = 'none';
+                  document.getElementById('ph1').style.display = 'flex';
+                "
+              />
+              <div
+                id="ph1"
+                style="
+                  display: none;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 8px;
+                  padding: 40px 20px;
+                  background: #242424;
+                  border-radius: 10px;
+                  border: 2px dashed #333;
+                "
+              >
+                <span style="font-size: 32px; opacity: 0.4">🖼️</span>
+                <span style="font-weight: 600; color: #555"
+                  >Screenshot Step 1</span
+                >
+                <span style="font-size: 12px; color: #444"
+                  >Aggiungi
+                  <code
+                    style="
+                      background: #1a1a1a;
+                      padding: 2px 6px;
+                      border-radius: 4px;
+                      color: #79c0ff;
+                    "
+                    >screenshots/step1.png</code
+                  ></span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step">
+          <div class="step-header">
+            <div class="step-number">2</div>
+            <div>
+              <div class="step-title">Cerca il giocatore</div>
+              <div class="step-subtitle">
+                Usa la barra di ricerca in alto a destra
+              </div>
+            </div>
+          </div>
+          <div class="step-body">
+            <p class="step-desc">
+              Digita il nome del giocatore nella barra di ricerca in alto a
+              destra e premi Invio. Clicca sul nome corretto tra i risultati.
+            </p>
+            <div
+              class="screenshot-slot"
+              id="slot-step2"
+              style="
+                position: relative;
+                min-height: 60px;
+                display: block;
+                padding: 0;
+              "
+            >
+              <img
+                src="/screenshots/step2.png"
+                alt="Step 2"
+                style="width: 100%; border-radius: 10px; display: block"
+                onerror="
+                  this.style.display = 'none';
+                  document.getElementById('ph2').style.display = 'flex';
+                "
+              />
+              <div
+                id="ph2"
+                style="
+                  display: none;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 8px;
+                  padding: 40px 20px;
+                  background: #242424;
+                  border-radius: 10px;
+                  border: 2px dashed #333;
+                "
+              >
+                <span style="font-size: 32px; opacity: 0.4">🖼️</span>
+                <span style="font-weight: 600; color: #555"
+                  >Screenshot Step 2</span
+                >
+                <span style="font-size: 12px; color: #444"
+                  >Aggiungi
+                  <code
+                    style="
+                      background: #1a1a1a;
+                      padding: 2px 6px;
+                      border-radius: 4px;
+                      color: #79c0ff;
+                    "
+                    >screenshots/step2.png</code
+                  ></span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step">
+          <div class="step-header">
+            <div class="step-number">3</div>
+            <div>
+              <div class="step-title">Apri i Game Logs</div>
+              <div class="step-subtitle">Nella pagina del giocatore</div>
+            </div>
+          </div>
+          <div class="step-body">
+            <p class="step-desc">
+              Nella pagina del giocatore, nel menu a sinistra trovi le voci di
+              navigazione. Clicca su <strong>Game Logs</strong>, poi seleziona
+              la stagione corrente.
+            </p>
+            <div class="click-path">
+              <span class="click-item">Pagina giocatore</span>
+              <span class="click-arrow">→</span>
+              <span class="click-item">Game Logs</span>
+              <span class="click-arrow">→</span>
+              <span class="click-item">Stagione corrente</span>
+            </div>
+            <div
+              class="screenshot-slot"
+              id="slot-step3"
+              style="
+                position: relative;
+                min-height: 60px;
+                display: block;
+                padding: 0;
+              "
+            >
+              <img
+                src="screenshots/step3.png"
+                alt="Step 3"
+                style="width: 100%; border-radius: 10px; display: block"
+                onerror="
+                  this.style.display = 'none';
+                  document.getElementById('ph3').style.display = 'flex';
+                "
+              />
+              <div
+                id="ph3"
+                style="
+                  display: none;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 8px;
+                  padding: 40px 20px;
+                  background: #242424;
+                  border-radius: 10px;
+                  border: 2px dashed #333;
+                "
+              >
+                <span style="font-size: 32px; opacity: 0.4">🖼️</span>
+                <span style="font-weight: 600; color: #555"
+                  >Screenshot Step 3</span
+                >
+                <span style="font-size: 12px; color: #444"
+                  >Aggiungi
+                  <code
+                    style="
+                      background: #1a1a1a;
+                      padding: 2px 6px;
+                      border-radius: 4px;
+                      color: #79c0ff;
+                    "
+                    >screenshots/step3.png</code
+                  ></span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="step">
+          <div class="step-header">
+            <div class="step-number">4</div>
+            <div>
+              <div class="step-title">
+                Trova la tabella "Regular Season Game Log"
+              </div>
+              <div class="step-subtitle">Scorri la pagina verso il basso</div>
+            </div>
+          </div>
+          <div class="step-body">
+            <p class="step-desc">
+              Scorri fino a trovare la voce
+              <strong>Hide Inactive/Did Not Play</strong>. Una volta cliccato,
+              questo ci consente di nascondere dati che non ci occorrono per il
+              modello.
+            </p>
+            <div
+              class="screenshot-slot"
+              id="slot-step4"
+              style="
+                position: relative;
+                min-height: 60px;
+                display: block;
+                padding: 0;
+              "
+            >
+              <img
+                src="screenshots/step4.png"
+                alt="Step 4"
+                style="width: 100%; border-radius: 10px; display: block"
+                onerror="
+                  this.style.display = 'none';
+                  document.getElementById('ph4').style.display = 'flex';
+                "
+              />
+              <div
+                id="ph4"
+                style="
+                  display: none;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 8px;
+                  padding: 40px 20px;
+                  background: #242424;
+                  border-radius: 10px;
+                  border: 2px dashed #333;
+                "
+              >
+                <span style="font-size: 32px; opacity: 0.4">🖼️</span>
+                <span style="font-weight: 600; color: #555"
+                  >Screenshot Step 4</span
+                >
+                <span style="font-size: 12px; color: #444"
+                  >Aggiungi
+                  <code
+                    style="
+                      background: #1a1a1a;
+                      padding: 2px 6px;
+                      border-radius: 4px;
+                      color: #79c0ff;
+                    "
+                    >screenshots/step4.png</code
+                  ></span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 5 -->
+        <div class="step">
+          <div class="step-header">
+            <div class="step-number">5</div>
+            <div>
+              <div class="step-title">
+                Clicca "Share & Export" → "Get table as CSV"
+              </div>
+              <div class="step-subtitle">Il bottone è sopra la tabella</div>
+            </div>
+          </div>
+          <div class="step-body">
+            <p class="step-desc">
+              Appena sopra la tabella trovi una barra con dei bottoni. Clicca su
+              <strong>Share & Export</strong>, poi nel menu a tendina seleziona
+              <strong>Get table as CSV</strong>.
+            </p>
+            <div class="click-path">
+              <span class="click-item">Share & Export</span>
+              <span class="click-arrow">→</span>
+              <span class="click-item">Get table as CSV</span>
+            </div>
+            <div
+              class="screenshot-slot"
+              id="slot-step5"
+              style="
+                position: relative;
+                min-height: 60px;
+                display: block;
+                padding: 0;
+              "
+            >
+              <img
+                src="screenshots/step5.png"
+                alt="Step 5"
+                style="width: 100%; border-radius: 10px; display: block"
+                onerror="
+                  this.style.display = 'none';
+                  document.getElementById('ph5').style.display = 'flex';
+                "
+              />
+              <div
+                id="ph5"
+                style="
+                  display: none;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 8px;
+                  padding: 40px 20px;
+                  background: #242424;
+                  border-radius: 10px;
+                  border: 2px dashed #333;
+                "
+              >
+                <span style="font-size: 32px; opacity: 0.4">🖼️</span>
+                <span style="font-weight: 600; color: #555"
+                  >Screenshot Step 5</span
+                >
+                <span style="font-size: 12px; color: #444"
+                  >Aggiungi
+                  <code
+                    style="
+                      background: #1a1a1a;
+                      padding: 2px 6px;
+                      border-radius: 4px;
+                      color: #79c0ff;
+                    "
+                    >screenshots/step5.png</code
+                  ></span
+                >
+              </div>
+            </div>
+            <div class="warning">
+              <strong>⚠️ Attenzione:</strong> comparirà una tabella con solo
+              testo — è normale! Quello è il CSV grezzo. Seleziona tutta la
+              tabella, e copiare con <strong>Ctrl+C</strong> (o Cmd+A su Mac).
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 6 -->
+        <div class="step">
+          <div class="step-header">
+            <div class="step-number">6</div>
+            <div>
+              <div class="step-title">Incolla il CSV nell'app</div>
+              <div class="step-subtitle">Sei quasi arrivato!</div>
+            </div>
+          </div>
+          <div class="step-body">
+            <p class="step-desc">
+              Torna su NBA Over Predictor, apri la sezione
+              <strong>"Alternativa: Incolla CSV manuale"</strong>, clicca nella
+              casella di testo e incolla con <strong>Ctrl+V</strong> (o Cmd+V su
+              Mac). Poi clicca il bottone <strong>"Carica CSV"</strong>.
+            </p>
+            <div
+              class="screenshot-slot"
+              id="slot-step6"
+              style="
+                position: relative;
+                min-height: 60px;
+                display: block;
+                padding: 0;
+              "
+            >
+              <img
+                src="/screenshots/step6.png"
+                alt="Step 6"
+                style="width: 100%; border-radius: 10px; display: block"
+                onerror="
+                  this.style.display = 'none';
+                  document.getElementById('ph6').style.display = 'flex';
+                "
+              />
+              <div
+                id="ph6"
+                style="
+                  display: none;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 8px;
+                  padding: 40px 20px;
+                  background: #242424;
+                  border-radius: 10px;
+                  border: 2px dashed #333;
+                "
+              >
+                <span style="font-size: 32px; opacity: 0.4">🖼️</span>
+                <span style="font-weight: 600; color: #555"
+                  >Screenshot Step 6</span
+                >
+                <span style="font-size: 12px; color: #444"
+                  >Aggiungi
+                  <code
+                    style="
+                      background: #1a1a1a;
+                      padding: 2px 6px;
+                      border-radius: 4px;
+                      color: #79c0ff;
+                    "
+                    >screenshots/step6.png</code
+                  ></span
+                >
+              </div>
+            </div>
+            <div class="tip">
+              <span>✅</span>
+              <span
+                >Se il caricamento è andato bene vedrai scritto
+                <strong>"CSV caricato: X partite"</strong> in verde. Ora puoi
+                procedere con l'analisi normalmente!</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /steps -->
+
+      <!-- NOTE FINALI -->
+      <div
+        style="
+          margin-top: 32px;
+          padding: 20px 24px;
+          background: #1a1a1a;
+          border-radius: 14px;
+          border: 1px solid #2a2a2a;
+        "
+      >
+        <div style="font-weight: 700; color: #f5f5f5; margin-bottom: 12px">
+          ❓ Problemi comuni
+        </div>
+        <div
+          style="
+            font-size: 14px;
+            color: #a0a0a0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+          "
+        >
+          <div>
+            <strong style="color: #f5f5f5">Il CSV non viene accettato:</strong>
+            assicurati di aver copiato l'intera pagina CSV, inclusa la prima
+            riga con i nomi delle colonne (Rk, G, Date, ecc.).
+          </div>
+          <div>
+            <strong style="color: #f5f5f5">Vedo pochissime partite:</strong>
+            controlla di aver selezionato la stagione giusta e di non aver
+            copiato solo parte della tabella.
+          </div>
+          <div>
+            <strong style="color: #f5f5f5">Errore "CSV non valido":</strong>
+            prova a incollare di nuovo partendo dall'inizio. A volte il
+            copia-incolla da mobile può troncare il testo.
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /container -->
+
+    <footer>
+      <p>
+        © 2026 NBA Over Predictor &nbsp;·&nbsp;
+        <a href="/terms.html">Termini</a> &nbsp;·&nbsp;
+        <a href="/privacy.html">Privacy</a> &nbsp;·&nbsp;
+        <a href="/cookie.html">Cookie Policy</a>
+      </p>
+    </footer>
+  </body>
+</html>

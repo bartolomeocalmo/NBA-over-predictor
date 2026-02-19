@@ -150,8 +150,8 @@
 
       .logo img {
         display: block;
-        max-width: 160px;
-        height: auto;
+        max-width: 240px;
+        width: auto;
       }
 
       /* Adatta colori SVG al tema light */
@@ -383,25 +383,6 @@
         font-size: 11px;
         opacity: 0.9;
         margin-top: 4px;
-      }
-
-      .site-header {
-        display: flex;
-        justify-content: center; /* centra il logo */
-        align-items: center;
-        padding: 20px 0;
-        background: transparent; /* lascia lo sfondo del sito */
-      }
-
-      .site-header img {
-        background: transparent; /* lascia lo sfondo del sito */
-      }
-
-      .logo {
-        width: 320px; /* cambia dimensione a piacere */
-        max-width: 90%;
-        height: auto;
-        display: block;
       }
 
       /* ============================================
@@ -907,12 +888,13 @@
   <body>
     <!-- HEADER -->
     <div class="header">
-      <header class="site-header">
-        <a href="/">
-          <img src="logo.png" alt="NBA Over Predictor" class="logo" />
-        </a>
-      </header>
-
+      <div class="logo">
+        <img
+          src="logo.png"
+          alt="NBA Over Predictor"
+          style="width: auto; display: block"
+        />
+      </div>
       <div class="user-section">
         <!-- THEME TOGGLE -->
         <button onclick="toggleTheme()" class="theme-toggle" id="themeToggle">
@@ -1086,14 +1068,15 @@
                 top: 100%;
                 left: 0;
                 right: 0;
-                background: white;
-                border: 2px solid #667eea;
+                background: var(--bg-card);
+                color: var(--text-primary);
+                border: 2px solid var(--accent-primary);
                 border-top: none;
                 border-radius: 0 0 8px 8px;
                 z-index: 100;
                 max-height: 260px;
                 overflow-y: auto;
-                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
               "
             ></div>
           </div>
@@ -1117,6 +1100,31 @@
           >
             📝 Alternativa: Incolla CSV manuale da Basketball Reference
           </summary>
+          <!-- LINK GUIDA CSV -->
+          <div style="margin: 12px 0 4px">
+            <a
+              href="/guida-csv.html"
+              target="_blank"
+              style="
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 16px;
+                background: rgba(59, 130, 246, 0.1);
+                border: 1px solid rgba(59, 130, 246, 0.3);
+                border-radius: 8px;
+                color: #93c5fd;
+                font-size: 13px;
+                font-weight: 600;
+                text-decoration: none;
+                transition: background 0.2s;
+              "
+              onmouseover="this.style.background = 'rgba(59,130,246,0.2)'"
+              onmouseout="this.style.background = 'rgba(59,130,246,0.1)'"
+            >
+              📖 Leggi la guida passo-passo con screenshot →
+            </a>
+          </div>
           <div style="margin-top: 12px">
             <textarea
               id="manualCsv"
@@ -2445,6 +2453,16 @@
       async function confirmAndAddEvent() {
         if (!activeProject || !currentAutoStake || !currentRecommended) {
           alert("Dati mancanti!");
+          return;
+        }
+
+        // Blocca se progetto già completato/fallito
+        if (activeProject.status === "completed") {
+          alert("🏆 Progetto già completato! Hai raggiunto il target.");
+          return;
+        }
+        if (activeProject.status === "failed") {
+          alert("Il progetto è concluso.");
           return;
         }
 

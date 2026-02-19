@@ -192,6 +192,11 @@ def serve_icons(filename):
     icons_path = os.path.join(FRONTEND_PATH, 'icons')
     return send_from_directory(icons_path, filename)
 
+@app.route("/screenshots/<path:filename>")
+def serve_screenshots(filename):
+    screenshots_path = os.path.join(FRONTEND_PATH, 'screenshots')
+    return send_from_directory(screenshots_path, filename)
+
 
 # ============================================
 # API ENDPOINTS
@@ -538,6 +543,10 @@ def calculate_bet():
         return jsonify({"error": f"Errore: {str(e)}"}), 500
 
 
+@app.route("/guida-csv.html")
+def serve_guida_csv():
+    return send_from_directory(FRONTEND_PATH, 'guida-csv.html')
+
 @app.route("/terms.html")
 def serve_terms():
     return send_from_directory(FRONTEND_PATH, 'terms.html')
@@ -576,4 +585,4 @@ if __name__ == "__main__":
     print("=" * 70)
     print("\n")
 
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    app.run(debug=True)
