@@ -8,6 +8,14 @@ import os
 import re
 import time
 
+# Payments (Stripe + PayPal)
+try:
+    from payments import payments_bp
+    PAYMENTS_ENABLED = True
+except ImportError:
+    PAYMENTS_ENABLED = False
+    print("[payments] Modulo non disponibile — installa stripe e firebase-admin")
+
 try:
     from nba_api.stats.endpoints import playergamelog
     from nba_api.stats.static import players as nba_players_static
@@ -17,6 +25,11 @@ except ImportError:
 
 app = Flask(__name__)
 CORS(app)
+
+# Registra blueprint pagamenti
+if PAYMENTS_ENABLED:
+    app.register_blueprint(payments_bp)
+    print("[payments] ✅ Stripe + PayPal routes attive")
 
 # ============================================
 # CACHE GIOCATORI NBA (caricata una volta all'avvio)
@@ -559,6 +572,10 @@ def serve_privacy():
 def serve_cookie():
     return send_from_directory(FRONTEND_PATH, 'cookie.html')
 
+@app.route("/premium.html")
+def serve_premium():
+    return send_from_directory(FRONTEND_PATH, 'premium.html')
+
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({
@@ -584,5 +601,3 @@ if __name__ == "__main__":
     print("  ✅ APRI IL BROWSER SU: http://127.0.0.1:5000/")
     print("=" * 70)
     print("\n")
-
-    app.run(debug=True)

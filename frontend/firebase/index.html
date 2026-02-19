@@ -151,6 +151,7 @@
       .logo img {
         display: block;
         max-width: 240px;
+        height: 80px;
         width: auto;
       }
 
@@ -649,6 +650,122 @@
       }
 
       /* ============================================
+         PLAN BADGES & LIMITS
+         ============================================ */
+
+      .plan-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+      }
+
+      .plan-badge.free {
+        background: var(--bg-card-hover);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+      }
+
+      .plan-badge.premium {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+      }
+
+      .limit-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        background: var(--bg-input);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+      }
+
+      .limit-bar .dots {
+        display: flex;
+        gap: 5px;
+      }
+
+      .limit-bar .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--border-color);
+      }
+
+      .limit-bar .dot.used {
+        background: var(--accent-primary);
+      }
+
+      .limit-bar .dot.last {
+        background: var(--accent-warning);
+      }
+
+      .limit-bar .dot.empty {
+        background: var(--accent-error);
+        animation: pulse-red 1.2s ease-in-out infinite;
+      }
+
+      @keyframes pulse-red {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+
+      .upgrade-banner {
+        padding: 14px 18px;
+        background: linear-gradient(
+          135deg,
+          rgba(245, 158, 11, 0.12),
+          rgba(217, 119, 6, 0.08)
+        );
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        border-radius: 10px;
+        margin-bottom: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .upgrade-banner p {
+        font-size: 13px;
+        color: #fcd34d;
+        margin: 0;
+      }
+
+      .upgrade-banner .btn-upgrade {
+        padding: 8px 16px;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: opacity 0.2s;
+      }
+
+      .upgrade-banner .btn-upgrade:hover {
+        opacity: 0.85;
+      }
+
+      /* ============================================
          SCROLLBAR
          ============================================ */
 
@@ -890,7 +1007,7 @@
     <div class="header">
       <div class="logo">
         <img
-          src="logo.png"
+          src="/logo.png"
           alt="NBA Over Predictor"
           style="width: auto; display: block"
         />
@@ -909,6 +1026,16 @@
         <div id="loggedInSection" style="display: none">
           <img id="userAvatar" class="user-avatar" />
           <span id="userName" style="font-weight: 600"></span>
+          <span
+            id="planBadge"
+            class="plan-badge free"
+            onclick="
+              if (userPlan === 'free') window.location = '/premium.html';
+            "
+            style="cursor: pointer"
+            title="Passa a Premium"
+            >Free</span
+          >
           <button onclick="showDashboard()" class="btn btn-secondary">
             Dashboard
           </button>
@@ -1048,6 +1175,29 @@
           >
             🔎 Cerca giocatore NBA
           </label>
+          <!-- CONTATORE RICERCHE (solo free) -->
+          <div id="searchLimitBar" class="limit-bar" style="display: none">
+            <div class="dots" id="searchDots"></div>
+            <span id="searchLimitText"></span>
+          </div>
+          <!-- BANNER UPGRADE quando esaurite -->
+          <div
+            id="searchLimitBanner"
+            class="upgrade-banner"
+            style="display: none"
+          >
+            <p>
+              🔒 Ricerche automatiche esaurite per oggi. Ricaricano tra
+              <strong id="searchResetCountdown"></strong>.<br />
+              Oppure usa il <strong>CSV manuale</strong> qui sotto.
+            </p>
+            <button
+              class="btn-upgrade"
+              onclick="window.location = '/premium.html'"
+            >
+              ⭐ Passa a Premium
+            </button>
+          </div>
           <div style="position: relative">
             <input
               type="text"
@@ -1435,6 +1585,188 @@
     <script>
       // STATE
       let currentUser = null;
+      let userPlan = "free"; // "free" | "premium"
+
+      // ============================================================
+      // FREEMIUM LIMITS
+      // ============================================================
+
+      const FREE_SEARCHES_PER_DAY = 3;
+      const FREE_PROJECTS_PER_MONTH = 2;
+
+      // Chiave usage Firestore per i progetti del mese corrente
+      function monthKey() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      }
+
+      // Legge piano utente da Firestore
+      async function loadUserPlan() {
+        if (!currentUser || !db) return;
+        try {
+          const snap = await db.collection("users").doc(currentUser.uid).get();
+          userPlan =
+            snap.exists && snap.data().plan === "premium" ? "premium" : "free";
+        } catch (e) {
+          userPlan = "free";
+        }
+        updatePlanBadge();
+        await updateSearchLimitUI();
+      }
+
+      function updatePlanBadge() {
+        const badge = document.getElementById("planBadge");
+        if (!badge) return;
+        if (userPlan === "premium") {
+          badge.className = "plan-badge premium";
+          badge.innerHTML = "⭐ Premium";
+        } else {
+          badge.className = "plan-badge free";
+          badge.innerHTML = "Free";
+        }
+      }
+
+      // ── RICERCHE GIORNALIERE ──────────────────────────────────
+
+      async function getSearchUsage() {
+        if (!currentUser || !db) return { count: 0, reset_at: 0 };
+        try {
+          const snap = await db
+            .collection("users")
+            .doc(currentUser.uid)
+            .collection("usage")
+            .doc("searches_daily")
+            .get();
+          if (!snap.exists) return { count: 0, reset_at: 0 };
+          return snap.data();
+        } catch (e) {
+          return { count: 0, reset_at: 0 };
+        }
+      }
+
+      async function incrementSearchUsage() {
+        if (!currentUser || !db) return;
+        const now = Date.now();
+        const usage = await getSearchUsage();
+        const isExpired = now >= (usage.reset_at || 0);
+        const newCount = isExpired ? 1 : (usage.count || 0) + 1;
+        const newResetAt = isExpired
+          ? now + 24 * 60 * 60 * 1000
+          : usage.reset_at;
+        await db
+          .collection("users")
+          .doc(currentUser.uid)
+          .collection("usage")
+          .doc("searches_daily")
+          .set({ count: newCount, reset_at: newResetAt });
+        return { count: newCount, reset_at: newResetAt };
+      }
+
+      async function canSearch() {
+        if (userPlan === "premium") return true;
+        const usage = await getSearchUsage();
+        const now = Date.now();
+        if (now >= (usage.reset_at || 0)) return true; // reset avvenuto
+        return (usage.count || 0) < FREE_SEARCHES_PER_DAY;
+      }
+
+      async function updateSearchLimitUI() {
+        if (userPlan === "premium") {
+          document.getElementById("searchLimitBar").style.display = "none";
+          document.getElementById("searchLimitBanner").style.display = "none";
+          document.getElementById("playerSearchInput").disabled = false;
+          return;
+        }
+
+        const usage = await getSearchUsage();
+        const now = Date.now();
+        const isExpired = now >= (usage.reset_at || 0);
+        const used = isExpired ? 0 : usage.count || 0;
+        const remaining = FREE_SEARCHES_PER_DAY - used;
+        const limitBar = document.getElementById("searchLimitBar");
+        const limitBanner = document.getElementById("searchLimitBanner");
+
+        if (remaining <= 0) {
+          // Esaurite
+          limitBar.style.display = "none";
+          limitBanner.style.display = "flex";
+          document.getElementById("playerSearchInput").disabled = true;
+          document.getElementById("playerSearchInput").placeholder =
+            "Ricerche esaurite — usa il CSV manuale";
+          // Countdown
+          startSearchCountdown(usage.reset_at);
+        } else {
+          limitBanner.style.display = "none";
+          limitBar.style.display = "flex";
+          document.getElementById("playerSearchInput").disabled = false;
+          document.getElementById("playerSearchInput").placeholder =
+            "Es. LeBron, Curry, Wembanyama...";
+          // Dots
+          const dotsEl = document.getElementById("searchDots");
+          dotsEl.innerHTML = "";
+          for (let i = 0; i < FREE_SEARCHES_PER_DAY; i++) {
+            const dot = document.createElement("div");
+            const isUsed = i < used;
+            const isLast = remaining === 1 && i === used;
+            dot.className = "dot " + (isUsed ? "used" : isLast ? "last" : "");
+            dotsEl.appendChild(dot);
+          }
+          document.getElementById("searchLimitText").innerText =
+            remaining === 1
+              ? "⚠️ Ultima ricerca automatica rimasta oggi"
+              : `${remaining} ricerch${remaining === 1 ? "a" : "e"} automatich${remaining === 1 ? "a" : "e"} rimast${remaining === 1 ? "a" : "e"} oggi`;
+        }
+      }
+
+      let countdownInterval = null;
+      function startSearchCountdown(resetAt) {
+        if (countdownInterval) clearInterval(countdownInterval);
+        const el = document.getElementById("searchResetCountdown");
+        function update() {
+          const diff = Math.max(0, resetAt - Date.now());
+          const h = Math.floor(diff / 3600000);
+          const m = Math.floor((diff % 3600000) / 60000);
+          const s = Math.floor((diff % 60000) / 1000);
+          if (el)
+            el.innerText = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+          if (diff === 0) {
+            clearInterval(countdownInterval);
+            updateSearchLimitUI();
+          }
+        }
+        update();
+        countdownInterval = setInterval(update, 1000);
+      }
+
+      // ── PROGETTI MENSILI ──────────────────────────────────────
+
+      async function getMonthlyProjectCount() {
+        if (!currentUser || !db) return 0;
+        try {
+          const snap = await db
+            .collection("users")
+            .doc(currentUser.uid)
+            .collection("usage")
+            .doc(monthKey())
+            .get();
+          if (!snap.exists) return 0;
+          return snap.data().projects_created || 0;
+        } catch (e) {
+          return 0;
+        }
+      }
+
+      async function incrementMonthlyProjectCount() {
+        const ref = db
+          .collection("users")
+          .doc(currentUser.uid)
+          .collection("usage")
+          .doc(monthKey());
+        await ref.set(
+          { projects_created: firebase.firestore.FieldValue.increment(1) },
+          { merge: true },
+        );
+      }
       let currentCSV = null;
       let currentProbability = null;
       let currentConfidence = null;
@@ -1550,6 +1882,7 @@
         document.getElementById("loggedInSection").style.alignItems = "center";
         document.getElementById("userName").innerText = user.displayName;
         document.getElementById("userAvatar").src = user.photoURL;
+        loadUserPlan(); // carica piano e aggiorna UI
         showDashboard();
         loadUserProjects();
       }
@@ -1695,6 +2028,13 @@
 
       async function selectPlayer(playerId, name) {
         closeDropdown();
+
+        // ── CONTROLLO LIMITE RICERCHE (solo free) ──
+        if (!(await canSearch())) {
+          await updateSearchLimitUI();
+          return;
+        }
+
         selectedPlayerId = playerId;
         document.getElementById("playerSearchInput").value = name;
 
@@ -1705,6 +2045,10 @@
         document.getElementById("btnAnalyze").disabled = true;
         document.getElementById("analysisResult").style.display = "none";
         hideError();
+
+        // Incrementa contatore PRIMA della chiamata API
+        await incrementSearchUsage();
+        await updateSearchLimitUI();
 
         // Mostra spinner
         const statusEl = document.getElementById("playerSearchStatus");
@@ -1900,6 +2244,31 @@
           return;
         }
 
+        // ── CONTROLLO LIMITE MENSILE (solo free) ──
+        if (userPlan === "free") {
+          const monthCount = await getMonthlyProjectCount();
+          if (monthCount >= FREE_PROJECTS_PER_MONTH) {
+            const d = new Date();
+            const nextMonth = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+            const resetDate = nextMonth.toLocaleDateString("it-IT", {
+              day: "numeric",
+              month: "long",
+            });
+            if (
+              !confirm(
+                `🔒 Hai raggiunto il limite di ${FREE_PROJECTS_PER_MONTH} progetti questo mese.\n\n` +
+                  `Il contatore si azzera il ${resetDate}.\n\n` +
+                  `⭐ Con il piano Premium puoi creare progetti illimitati!\n\n` +
+                  `Vuoi saperne di più sul piano Premium?`,
+              )
+            )
+              return;
+            window.location = "/premium.html";
+            closeNewProjectModal();
+            return;
+          }
+        }
+
         // Calculate minimum win rate needed (realistic with compounding)
         const targetROI = (target / bankroll) * 100; // 80%
         const avgOdds = 1.85;
@@ -1983,6 +2352,7 @@
               events: [],
             });
 
+          await incrementMonthlyProjectCount();
           closeNewProjectModal();
           loadUserProjects();
           alert("✅ Progetto creato!");

@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NBA Over Predictor — Premium</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="/firebase-config.js"></script>
+    <!-- PayPal SDK — sostituisci YOUR_PAYPAL_CLIENT_ID con quello reale -->
+    <script src="https://www.paypal.com/sdk/js?client-id=YOUR_PAYPAL_CLIENT_ID&currency=EUR&locale=it_IT"></script>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          sans-serif;
+        background: #0f0f0f;
+        color: #f5f5f5;
+        min-height: 100vh;
+        padding: 40px 20px;
+      }
+
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #a0a0a0;
+        text-decoration: none;
+        font-size: 14px;
+        margin-bottom: 40px;
+        transition: color 0.2s;
+      }
+      .back-link:hover {
+        color: #f5f5f5;
+      }
+
+      .hero {
+        text-align: center;
+        max-width: 600px;
+        margin: 0 auto 48px;
+      }
+      .hero h1 {
+        font-size: 42px;
+        font-weight: 800;
+        margin-bottom: 16px;
+      }
+      .hero h1 span {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .hero p {
+        font-size: 18px;
+        color: #a0a0a0;
+        line-height: 1.6;
+      }
+
+      .plans {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        max-width: 900px;
+        margin: 0 auto 48px;
+      }
+
+      @media (max-width: 640px) {
+        .plans {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .plan-card {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 20px;
+        padding: 36px;
+      }
+      .plan-card.featured {
+        border-color: #f59e0b;
+        box-shadow:
+          0 0 0 1px #f59e0b,
+          0 8px 32px rgba(245, 158, 11, 0.2);
+        position: relative;
+      }
+      .featured-badge {
+        position: absolute;
+        top: -14px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 16px;
+        border-radius: 20px;
+        white-space: nowrap;
+      }
+
+      .plan-name {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: #a0a0a0;
+      }
+      .plan-price {
+        font-size: 48px;
+        font-weight: 800;
+        margin-bottom: 4px;
+      }
+      .plan-price sup {
+        font-size: 24px;
+        vertical-align: top;
+        margin-top: 10px;
+      }
+      .plan-period {
+        font-size: 14px;
+        color: #6b6b6b;
+        margin-bottom: 28px;
+      }
+
+      .features {
+        list-style: none;
+        margin-bottom: 32px;
+      }
+      .features li {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 8px 0;
+        font-size: 15px;
+        border-bottom: 1px solid #242424;
+      }
+      .features li:last-child {
+        border-bottom: none;
+      }
+      .features li .icon {
+        flex-shrink: 0;
+        font-size: 16px;
+      }
+      .features li.disabled {
+        color: #555;
+      }
+
+      .btn-plan {
+        width: 100%;
+        padding: 16px;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-plan.free-btn {
+        background: #2a2a2a;
+        color: #a0a0a0;
+        border: 1px solid #333;
+      }
+      .btn-plan.premium-btn {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+      }
+      .btn-plan.premium-btn:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+      }
+      .btn-plan:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      /* Payment modal */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-overlay.active {
+        display: flex;
+      }
+
+      .payment-modal {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 20px;
+        padding: 40px;
+        max-width: 460px;
+        width: 90%;
+      }
+
+      .payment-modal h2 {
+        font-size: 22px;
+        font-weight: 800;
+        margin-bottom: 8px;
+      }
+      .payment-modal .subtitle {
+        color: #a0a0a0;
+        font-size: 14px;
+        margin-bottom: 28px;
+      }
+
+      .payment-options {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .btn-stripe {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 16px;
+        background: #635bff;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-stripe:hover {
+        background: #4f46e5;
+        transform: translateY(-1px);
+      }
+      .btn-stripe:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      #paypal-button-container {
+        min-height: 50px;
+      }
+
+      .divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #555;
+        font-size: 13px;
+        margin: 4px 0;
+      }
+      .divider::before,
+      .divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: #333;
+      }
+
+      .close-modal {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        color: #555;
+        font-size: 13px;
+        cursor: pointer;
+        transition: color 0.2s;
+      }
+      .close-modal:hover {
+        color: #a0a0a0;
+      }
+
+      .success-box {
+        display: none;
+        text-align: center;
+        padding: 32px;
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid #10b981;
+        border-radius: 12px;
+        margin-top: 20px;
+      }
+      .success-box h3 {
+        font-size: 22px;
+        font-weight: 800;
+        color: #10b981;
+        margin-bottom: 8px;
+      }
+      .success-box p {
+        color: #a0a0a0;
+        margin-bottom: 16px;
+      }
+      .success-box a {
+        color: #3b82f6;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .login-required {
+        display: none;
+        padding: 16px;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid #ef4444;
+        border-radius: 10px;
+        font-size: 14px;
+        color: #fca5a5;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .already-premium {
+        display: none;
+        text-align: center;
+        padding: 24px;
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.4);
+        border-radius: 12px;
+        margin-bottom: 24px;
+        font-size: 15px;
+        color: #fcd34d;
+      }
+
+      .security-note {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-size: 12px;
+        color: #555;
+        margin-top: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="/" class="back-link">← Torna all'app</a>
+
+    <div class="hero">
+      <h1>Passa a <span>Premium</span></h1>
+      <p>
+        Sblocca analisi illimitate e porta la tua strategia al livello
+        successivo.
+      </p>
+    </div>
+
+    <div
+      id="alreadyPremium"
+      class="already-premium"
+      style="max-width: 900px; margin: 0 auto 24px"
+    >
+      ⭐ Sei già un utente Premium! Goditi tutte le funzionalità senza limiti.
+    </div>
+
+    <div class="plans">
+      <!-- FREE -->
+      <div class="plan-card">
+        <div class="plan-name">Free</div>
+        <div class="plan-price"><sup>€</sup>0</div>
+        <div class="plan-period">per sempre</div>
+        <ul class="features">
+          <li><span class="icon">✅</span> Analisi scommessa NBA</li>
+          <li><span class="icon">✅</span> Stake automatico Kelly</li>
+          <li><span class="icon">✅</span> Storico eventi</li>
+          <li><span class="icon">⚠️</span> 2 progetti al mese</li>
+          <li><span class="icon">⚠️</span> 3 ricerche automatiche / giorno</li>
+          <li class="disabled">
+            <span class="icon">❌</span> CSV manuale illimitato
+          </li>
+        </ul>
+        <button class="btn-plan free-btn" onclick="window.location = '/'">
+          Piano attuale
+        </button>
+      </div>
+
+      <!-- PREMIUM -->
+      <div class="plan-card featured">
+        <div class="featured-badge">⭐ CONSIGLIATO</div>
+        <div class="plan-name">Premium</div>
+        <div class="plan-price"><sup>€</sup>4,90</div>
+        <div class="plan-period">al mese · annulla quando vuoi</div>
+        <ul class="features">
+          <li><span class="icon">✅</span> Analisi scommessa NBA</li>
+          <li><span class="icon">✅</span> Stake automatico Kelly</li>
+          <li><span class="icon">✅</span> Storico eventi</li>
+          <li>
+            <span class="icon">✅</span> <strong>Progetti illimitati</strong>
+          </li>
+          <li>
+            <span class="icon">✅</span>
+            <strong>Ricerche automatiche illimitate</strong>
+          </li>
+          <li>
+            <span class="icon">✅</span>
+            <strong>Badge Premium esclusivo ⭐</strong>
+          </li>
+        </ul>
+        <button
+          class="btn-plan premium-btn"
+          id="btnUpgrade"
+          onclick="openPaymentModal()"
+        >
+          🚀 Inizia ora — €4,90/mese
+        </button>
+      </div>
+    </div>
+
+    <div class="security-note">
+      🔒 Pagamenti sicuri tramite Stripe e PayPal &nbsp;·&nbsp; Annullabile in
+      qualsiasi momento
+    </div>
+
+    <!-- PAYMENT MODAL -->
+    <div class="modal-overlay" id="paymentModal">
+      <div class="payment-modal">
+        <h2>💳 Scegli come pagare</h2>
+        <p class="subtitle">
+          NBA Over Predictor Premium — €4,90/mese · cancella quando vuoi
+        </p>
+
+        <div id="loginRequired" class="login-required">
+          ⚠️ Devi effettuare il login prima di acquistare.
+          <br /><a href="/" style="color: #3b82f6; font-weight: 600"
+            >Vai all'app e fai Login con Google →</a
+          >
+        </div>
+
+        <div class="payment-options" id="paymentOptions">
+          <!-- STRIPE -->
+          <button class="btn-stripe" id="btnStripe" onclick="payWithStripe()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+              <path
+                d="M13.479 9.883c-1.626-.604-2.512-.931-2.512-1.618 0-.604.543-.931 1.358-.931 1.086 0 2.173.362 3.086.966l.453-2.790C14.950 5.166 13.696 5 12.441 5 9.566 5 7.608 6.569 7.608 9.087c0 2.397 1.596 3.207 3.492 3.811 1.506.483 2.180.845 2.180 1.568 0 .724-.604 1.086-1.567 1.086-1.267 0-2.534-.483-3.620-1.267L7.700 16.980C8.907 17.826 10.473 18.250 12.038 18.250c3.086 0 5.138-1.508 5.138-4.147 0-2.518-1.627-3.448-3.697-4.220z"
+              />
+            </svg>
+            Paga con Carta (Stripe)
+          </button>
+
+          <div class="divider">oppure</div>
+
+          <!-- PAYPAL -->
+          <div id="paypal-button-container"></div>
+        </div>
+
+        <!-- Success -->
+        <div class="success-box" id="successBox">
+          <h3>🎉 Benvenuto in Premium!</h3>
+          <p>
+            Il tuo piano è stato aggiornato. Ricarica l'app per vedere tutte le
+            funzionalità sbloccate.
+          </p>
+          <a href="/">Vai all'app →</a>
+        </div>
+
+        <span class="close-modal" onclick="closePaymentModal()">× Annulla</span>
+      </div>
+    </div>
+
+    <script>
+      let auth = null;
+      let currentUser = null;
+
+      // Init Firebase
+      window.addEventListener("DOMContentLoaded", () => {
+        if (typeof firebase !== "undefined" && firebase.apps.length) {
+          auth = firebase.auth();
+          auth.onAuthStateChanged((user) => {
+            currentUser = user;
+            onAuthReady(user);
+          });
+        }
+
+        // Controlla query param ?payment=success
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("payment") === "success") {
+          showSuccess();
+        }
+      });
+
+      function onAuthReady(user) {
+        if (user) {
+          // Controlla se già premium
+          if (typeof firebase !== "undefined") {
+            firebase
+              .firestore()
+              .collection("users")
+              .doc(user.uid)
+              .get()
+              .then((snap) => {
+                if (snap.exists && snap.data().plan === "premium") {
+                  document.getElementById("alreadyPremium").style.display =
+                    "block";
+                  document.getElementById("btnUpgrade").disabled = true;
+                  document.getElementById("btnUpgrade").innerText =
+                    "✅ Già Premium";
+                }
+              });
+          }
+        }
+      }
+
+      function openPaymentModal() {
+        document.getElementById("paymentModal").classList.add("active");
+
+        if (!currentUser) {
+          document.getElementById("loginRequired").style.display = "block";
+          document.getElementById("paymentOptions").style.display = "none";
+          return;
+        }
+
+        document.getElementById("loginRequired").style.display = "none";
+        document.getElementById("paymentOptions").style.display = "flex";
+        initPayPalButton();
+      }
+
+      function closePaymentModal() {
+        document.getElementById("paymentModal").classList.remove("active");
+      }
+
+      // Chiudi cliccando fuori
+      document.getElementById("paymentModal").addEventListener("click", (e) => {
+        if (e.target === document.getElementById("paymentModal"))
+          closePaymentModal();
+      });
+
+      // ── STRIPE ──────────────────────────────────────────────────
+
+      async function payWithStripe() {
+        if (!currentUser) return;
+        const btn = document.getElementById("btnStripe");
+        btn.disabled = true;
+        btn.innerText = "⏳ Reindirizzamento...";
+
+        try {
+          const res = await fetch("/stripe/create-checkout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              uid: currentUser.uid,
+              email: currentUser.email,
+            }),
+          });
+          const data = await res.json();
+          if (data.url) {
+            window.location.href = data.url;
+          } else {
+            alert("Errore: " + (data.error || "Riprova"));
+            btn.disabled = false;
+            btn.innerText = "Paga con Carta (Stripe)";
+          }
+        } catch (e) {
+          alert("Errore di rete: " + e.message);
+          btn.disabled = false;
+          btn.innerText = "Paga con Carta (Stripe)";
+        }
+      }
+
+      // ── PAYPAL ──────────────────────────────────────────────────
+
+      let paypalInited = false;
+
+      function initPayPalButton() {
+        if (paypalInited) return;
+        if (typeof paypal === "undefined") {
+          document.getElementById("paypal-button-container").innerHTML =
+            '<p style="color:#555;font-size:13px;text-align:center;">PayPal non disponibile al momento.</p>';
+          return;
+        }
+        paypalInited = true;
+
+        paypal
+          .Buttons({
+            style: {
+              layout: "horizontal",
+              color: "gold",
+              shape: "rect",
+              label: "paypal",
+              height: 50,
+            },
+
+            createOrder: async () => {
+              const res = await fetch("/paypal/create-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ uid: currentUser.uid }),
+              });
+              const data = await res.json();
+              if (data.error) throw new Error(data.error);
+              return data.id;
+            },
+
+            onApprove: async (data) => {
+              const res = await fetch("/paypal/capture-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  order_id: data.orderID,
+                  uid: currentUser.uid,
+                }),
+              });
+              const result = await res.json();
+              if (result.success) {
+                showSuccess();
+              } else {
+                alert("Pagamento non completato. Riprova.");
+              }
+            },
+
+            onError: (err) => {
+              console.error("PayPal error:", err);
+              alert("Errore PayPal. Riprova o usa la carta.");
+            },
+          })
+          .render("#paypal-button-container");
+      }
+
+      function showSuccess() {
+        document.getElementById("paymentModal").classList.add("active");
+        document.getElementById("paymentOptions").style.display = "none";
+        document.getElementById("loginRequired").style.display = "none";
+        document.getElementById("successBox").style.display = "block";
+      }
+    </script>
+  </body>
+</html>
