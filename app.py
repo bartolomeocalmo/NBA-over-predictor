@@ -12,9 +12,10 @@ import time
 try:
     from payments import payments_bp
     PAYMENTS_ENABLED = True
-except ImportError:
+    print("[payments] ✅ Modulo caricato correttamente")
+except Exception as e:
     PAYMENTS_ENABLED = False
-    print("[payments] Modulo non disponibile — installa stripe e firebase-admin")
+    print(f"[payments] ❌ Errore import: {e}")
 
 try:
     from nba_api.stats.endpoints import playergamelog
@@ -29,7 +30,15 @@ CORS(app)
 # Registra blueprint pagamenti
 if PAYMENTS_ENABLED:
     app.register_blueprint(payments_bp)
-    print("[payments] ✅ Stripe + PayPal routes attive")
+    print("[payments] ✅ Routes attive: /stripe/create-checkout, /paypal/create-order, /paypal/capture-order")
+else:
+    # Fallback routes che restituiscono JSON invece di 404 HTML
+    @app.route("/paypal/create-order", methods=["POST"])
+    def paypal_fallback():
+        return jsonify({"error": "Modulo payments non caricato — controlla i log Railway"}), 503
+    @app.route("/stripe/create-checkout", methods=["POST"])
+    def stripe_fallback():
+        return jsonify({"error": "Modulo payments non caricato — controlla i log Railway"}), 503
 
 # ============================================
 # CACHE GIOCATORI NBA (caricata una volta all'avvio)
