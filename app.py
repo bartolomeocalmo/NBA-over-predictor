@@ -209,6 +209,10 @@ def serve_styles():
     return send_from_directory(FRONTEND_PATH, 'style.css')
 
 
+@app.route("/css/<path:filename>")
+def serve_css(filename):
+    return send_from_directory(os.path.join(FRONTEND_PATH, 'css'), filename)
+
 @app.route("/icons/<path:filename>")
 def serve_icons(filename):
     icons_path = os.path.join(FRONTEND_PATH, 'icons')
@@ -616,3 +620,5 @@ if __name__ == "__main__":
     print("  ✅ APRI IL BROWSER SU: http://127.0.0.1:5000/")
     print("=" * 70)
     print("\n")
+
+    app.run(debug=True)

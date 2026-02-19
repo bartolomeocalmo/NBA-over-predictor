@@ -1,0 +1,253 @@
+/* ============================================
+   NBA Over Predictor — Legal Pages Styles
+   Usato da: terms.html, privacy.html, cookie.html
+   ============================================ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── THEME VARIABLES ── */
+:root {
+  --bg-primary: #0f0f0f;
+  --bg-card: #1a1a1a;
+  --bg-header: #242424;
+  --bg-btn: #1e1e1e;
+  --bg-btn-hover: #2a2a2a;
+  --text-primary: #f5f5f5;
+  --text-secondary: #a0a0a0;
+  --text-muted: #6b6b6b;
+  --border: #333;
+  --accent: #3b82f6;
+  --warning-bg: rgba(239, 68, 68, 0.1);
+  --warning-border: #ef4444;
+  --warning-text: #fca5a5;
+  --warning-strong: #f87171;
+}
+
+[data-theme="light"] {
+  --bg-primary: #f5f5f5;
+  --bg-card: #ffffff;
+  --bg-header: #ffffff;
+  --bg-btn: #f3f4f6;
+  --bg-btn-hover: #e5e7eb;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --border: #e5e7eb;
+  --accent: #2563eb;
+  --warning-bg: rgba(239, 68, 68, 0.07);
+  --warning-border: #ef4444;
+  --warning-text: #991b1b;
+  --warning-strong: #7f1d1d;
+}
+
+body {
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  padding: 20px;
+  line-height: 1.7;
+  transition:
+    background 0.3s,
+    color 0.3s;
+}
+
+.header {
+  max-width: 800px;
+  margin: 0 auto 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: var(--bg-header);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+}
+
+.header img {
+  height: 40px;
+  width: auto;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.back-btn {
+  padding: 10px 18px;
+  background: var(--bg-btn);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.back-btn:hover {
+  background: var(--bg-btn-hover);
+}
+
+.theme-toggle {
+  padding: 8px 14px;
+  background: var(--bg-btn);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.theme-toggle:hover {
+  background: var(--bg-btn-hover);
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 48px;
+  border: 1px solid var(--border);
+}
+
+h1 {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.last-updated {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 40px;
+}
+
+h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 36px 0 12px;
+}
+
+p {
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+  font-size: 15px;
+}
+
+ul {
+  color: var(--text-secondary);
+  padding-left: 20px;
+  margin-bottom: 14px;
+  font-size: 15px;
+}
+
+li {
+  margin-bottom: 8px;
+}
+
+.warning-box {
+  background: var(--warning-bg);
+  border-left: 4px solid var(--warning-border);
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin: 24px 0;
+  color: var(--warning-text);
+  font-size: 15px;
+}
+
+.warning-box strong {
+  color: var(--warning-strong);
+}
+
+/* Privacy: info-box e tabella */
+.info-box {
+  background: var(--bg-btn);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 20px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0 24px;
+  font-size: 14px;
+}
+
+th {
+  background: var(--bg-btn);
+  color: var(--text-primary);
+  font-weight: 600;
+  padding: 10px 14px;
+  text-align: left;
+  border: 1px solid var(--border);
+}
+
+td {
+  color: var(--text-secondary);
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+}
+
+footer {
+  max-width: 800px;
+  margin: 32px auto 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 20px 0;
+}
+
+footer a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 24px 16px;
+  }
+  h1 {
+    font-size: 24px;
+  }
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .header-right {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  table {
+    font-size: 12px;
+  }
+  th,
+  td {
+    padding: 8px 10px;
+  }
+}

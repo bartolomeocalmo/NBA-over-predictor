@@ -29,3 +29,4 @@ firebase-config.js
 *.key
 *.pem
 secrets.json
+service-account.json
