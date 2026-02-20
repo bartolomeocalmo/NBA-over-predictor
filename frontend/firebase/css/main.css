@@ -955,3 +955,227 @@ details[open] summary {
     min-height: 44px;
   }
 }
+
+/* ============================================
+   LANDING PAGE (utenti non loggati)
+   ============================================ */
+
+.landing-hero {
+  max-width: 700px;
+  margin: 0 auto 64px;
+  text-align: center;
+  padding: 60px 20px 20px;
+}
+
+.landing-badge {
+  display: inline-block;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 16px;
+  border-radius: 20px;
+  margin-bottom: 24px;
+  letter-spacing: 0.5px;
+}
+
+.landing-title {
+  font-size: 52px;
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 20px;
+  color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+  .landing-title {
+    font-size: 34px;
+  }
+}
+
+.landing-subtitle {
+  font-size: 18px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 36px;
+  max-width: 540px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.landing-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 16px 32px;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    transform 0.2s;
+  font-family: inherit;
+  margin-bottom: 14px;
+}
+.landing-cta:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+}
+
+.landing-note {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Feature cards */
+.landing-features {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 48px;
+}
+
+@media (max-width: 900px) {
+  .landing-features {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .landing-features {
+    grid-template-columns: 1fr;
+  }
+}
+
+.landing-feature {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px 20px;
+  text-align: center;
+  transition:
+    border-color 0.2s,
+    transform 0.2s;
+}
+.landing-feature:hover {
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+}
+
+.lf-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+.lf-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.lf-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* Plans */
+.landing-plans {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-width: 640px;
+  margin: 0 auto 40px;
+}
+
+@media (max-width: 600px) {
+  .landing-plans {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lp-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 28px 24px;
+  position: relative;
+}
+.lp-card.lp-featured {
+  border-color: #f59e0b;
+  box-shadow:
+    0 0 0 1px #f59e0b,
+    0 8px 24px rgba(245, 158, 11, 0.15);
+}
+
+.lp-badge {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 14px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.lp-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.lp-price {
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+}
+.lp-price span {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.lp-features {
+  list-style: none;
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lp-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+}
+.lp-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+.lp-btn-free {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+.lp-btn-premium {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+}
