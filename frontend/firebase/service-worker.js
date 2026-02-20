@@ -2,7 +2,7 @@
 // NBA Over Predictor — Service Worker PWA
 // ============================================
 
-const CACHE_NAME = "nba-predictor-v2";
+const CACHE_NAME = "nba-predictor-v3";
 
 // File da cachare per funzionamento offline
 const STATIC_ASSETS = [
@@ -79,10 +79,16 @@ self.addEventListener("fetch", (event) => {
     "/fetch_player_csv",
     "/search_players",
     "/health",
-  ].some((path) => url.pathname === path);
+    "/stripe/create-checkout",
+    "/paypal/create-order",
+    "/paypal/capture-order",
+    "/config/paypal-client-id",
+    "/webhook/stripe",
+  ].some((path) => url.pathname.startsWith(path));
 
   if (isApiCall) {
-    event.respondWith(networkFirst(event.request));
+    // Lascia passare le chiamate API direttamente senza intercettarle
+    // Evita falsi "offline" causati da timeout del backend (es. NBA API lenta)
     return;
   }
 
