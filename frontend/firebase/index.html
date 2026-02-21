@@ -275,6 +275,16 @@
         </button>
       </div>
 
+      <!-- Footer dentro landing -->
+      <footer style="display:block; max-width:1400px; margin:32px auto 0; padding:20px 24px; text-align:center; border-top:1px solid var(--border-color); font-size:13px; color:var(--text-muted);">
+        <p>© 2026 NBA Over Predictor &nbsp;·&nbsp;
+          <a href="/terms.html" style="color:var(--text-secondary);text-decoration:none">Termini</a> &nbsp;·&nbsp;
+          <a href="/privacy.html" style="color:var(--text-secondary);text-decoration:none">Privacy</a> &nbsp;·&nbsp;
+          <a href="/cookie.html" style="color:var(--text-secondary);text-decoration:none">Cookie Policy</a>
+        </p>
+        <p style="margin-top:6px;font-size:12px">Strumento di analisi statistica a scopo informativo. Non costituisce consulenza finanziaria.</p>
+      </footer>
+
     </div>
 
     <!-- DASHBOARD VIEW -->
@@ -833,10 +843,12 @@
           userPlan =
             snap.exists && snap.data().plan === "premium" ? "premium" : "free";
         } catch (e) {
+          console.warn("[loadUserPlan] errore Firestore:", e);
           userPlan = "free";
         }
         updatePlanBadge();
-        await updateSearchLimitUI();
+        // updateSearchLimitUI accede a elementi del predictorView — chiamata sicura
+        try { await updateSearchLimitUI(); } catch(e) { console.warn("[loadUserPlan] updateSearchLimitUI:", e); }
       }
 
       function updatePlanBadge() {
@@ -896,10 +908,16 @@
       }
 
       async function updateSearchLimitUI() {
+        // Helper null-safe
+        const $id = (id) => document.getElementById(id);
+
+        // Se elementi non esistono nel DOM (es. predictorView non ancora visibile), esci silenziosamente
+        if (!$id("searchLimitBar")) return;
+
         if (userPlan === "premium") {
-          document.getElementById("searchLimitBar").style.display = "none";
-          document.getElementById("searchLimitBanner").style.display = "none";
-          document.getElementById("playerSearchInput").disabled = false;
+          $id("searchLimitBar").style.display = "none";
+          $id("searchLimitBanner").style.display = "none";
+          if ($id("playerSearchInput")) $id("playerSearchInput").disabled = false;
           return;
         }
 
@@ -908,40 +926,46 @@
         const isExpired = now >= (usage.reset_at || 0);
         const used = isExpired ? 0 : usage.count || 0;
         const remaining = FREE_SEARCHES_PER_DAY - used;
-        const limitBar = document.getElementById("searchLimitBar");
-        const limitBanner = document.getElementById("searchLimitBanner");
+        const limitBar = $id("searchLimitBar");
+        const limitBanner = $id("searchLimitBanner");
 
         if (remaining <= 0) {
-          // Esaurite
-          limitBar.style.display = "none";
-          limitBanner.style.display = "flex";
-          document.getElementById("playerSearchInput").disabled = true;
-          document.getElementById("playerSearchInput").placeholder =
-            "Ricerche esaurite — usa il CSV manuale";
+          // Ricerche esaurite
+          if (limitBar) limitBar.style.display = "none";
+          if (limitBanner) limitBanner.style.display = "flex";
+          if ($id("playerSearchInput")) {
+            $id("playerSearchInput").disabled = true;
+            $id("playerSearchInput").placeholder = "Ricerche esaurite — usa il CSV manuale";
+          }
           // Mostra sezione CSV manuale
           showManualCsv();
           // Countdown
           startSearchCountdown(usage.reset_at);
         } else {
-          limitBanner.style.display = "none";
-          limitBar.style.display = "flex";
-          document.getElementById("playerSearchInput").disabled = false;
-          document.getElementById("playerSearchInput").placeholder =
-            "Es. LeBron, Curry, Wembanyama...";
-          // Dots
-          const dotsEl = document.getElementById("searchDots");
-          dotsEl.innerHTML = "";
-          for (let i = 0; i < FREE_SEARCHES_PER_DAY; i++) {
-            const dot = document.createElement("div");
-            const isUsed = i < used;
-            const isLast = remaining === 1 && i === used;
-            dot.className = "dot " + (isUsed ? "used" : isLast ? "last" : "");
-            dotsEl.appendChild(dot);
+          if (limitBanner) limitBanner.style.display = "none";
+          if (limitBar) limitBar.style.display = "flex";
+          if ($id("playerSearchInput")) {
+            $id("playerSearchInput").disabled = false;
+            $id("playerSearchInput").placeholder = "Es. LeBron, Curry, Wembanyama...";
           }
-          document.getElementById("searchLimitText").innerText =
-            remaining === 1
-              ? "⚠️ Ultima ricerca automatica rimasta oggi"
-              : `${remaining} ricerch${remaining === 1 ? "a" : "e"} automatich${remaining === 1 ? "a" : "e"} rimast${remaining === 1 ? "a" : "e"} oggi`;
+          // Dots
+          const dotsEl = $id("searchDots");
+          if (dotsEl) {
+            dotsEl.innerHTML = "";
+            for (let i = 0; i < FREE_SEARCHES_PER_DAY; i++) {
+              const dot = document.createElement("div");
+              const isUsed = i < used;
+              const isLast = remaining === 1 && i === used;
+              dot.className = "dot " + (isUsed ? "used" : isLast ? "last" : "");
+              dotsEl.appendChild(dot);
+            }
+          }
+          if ($id("searchLimitText")) {
+            $id("searchLimitText").innerText =
+              remaining === 1
+                ? "⚠️ Ultima ricerca automatica rimasta oggi"
+                : `${remaining} ricerch${remaining === 1 ? "a" : "e"} automatich${remaining === 1 ? "a" : "e"} rimast${remaining === 1 ? "a" : "e"} oggi`;
+          }
         }
       }
 
@@ -1143,6 +1167,8 @@
         document.getElementById("predictorView").classList.add("active");
         updateActiveProjectBanner();
         updateEventsHistory();
+        // Ora che predictorView è visibile, aggiorna i limiti ricerche
+        updateSearchLimitUI().catch(e => console.warn("[showPredictor] updateSearchLimitUI:", e));
       }
 
       // ============================================================
