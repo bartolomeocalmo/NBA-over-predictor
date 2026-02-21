@@ -984,15 +984,19 @@
       }
 
       async function incrementMonthlyProjectCount() {
-        const ref = db
-          .collection("users")
-          .doc(currentUser.uid)
-          .collection("usage")
-          .doc(monthKey());
-        await ref.set(
-          { projects_created: firebase.firestore.FieldValue.increment(1) },
-          { merge: true },
-        );
+        try {
+          const ref = db
+            .collection("users")
+            .doc(currentUser.uid)
+            .collection("usage")
+            .doc(monthKey());
+          await ref.set(
+            { projects_created: firebase.firestore.FieldValue.increment(1) },
+            { merge: true },
+          );
+        } catch(e) {
+          console.warn("[usage] incrementMonthlyProjectCount fallito:", e);
+        }
       }
       let currentCSV = null;
       let currentProbability = null;
@@ -1287,9 +1291,9 @@
         document.getElementById("analysisResult").style.display = "none";
         hideError();
 
-        // Incrementa contatore PRIMA della chiamata API
-        await incrementSearchUsage();
-        await updateSearchLimitUI();
+        // Incrementa contatore (con try/catch per non bloccare se Firestore dà errore)
+        try { await incrementSearchUsage(); } catch(e) { console.warn("[usage] increment fallito:", e); }
+        try { await updateSearchLimitUI(); } catch(e) { console.warn("[usage] updateUI fallito:", e); }
 
         // Mostra spinner
         const statusEl = document.getElementById("playerSearchStatus");
@@ -2280,6 +2284,7 @@
     <!-- FOOTER LEGALE -->
     <footer
       style="
+        display: block;
         max-width: 1400px;
         margin: 32px auto 0;
         padding: 20px 24px;
