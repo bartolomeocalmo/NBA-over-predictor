@@ -268,10 +268,10 @@
       <div class="ld-final-cta">
         <div class="ld-final-emoji">🏀</div>
         <h2 class="ld-final-title">Pronto ad analizzare la prossima partita?</h2>
-        <p class="ld-final-sub">Accedi gratis in 10 secondi con il tuo account Google.</p>
+        <p class="ld-final-sub">Accedi in 10 secondi con il tuo account Google.</p>
         <button onclick="handleLogin()" class="ld-btn-primary ld-btn-large">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-          Accedi con Google 
+          Accedi con Google
         </button>
       </div>
 
@@ -919,7 +919,7 @@
           document.getElementById("playerSearchInput").placeholder =
             "Ricerche esaurite — usa il CSV manuale";
           // Mostra sezione CSV manuale
-          document.getElementById("manualCsvSection").style.display = "block";
+          showManualCsv();
           // Countdown
           startSearchCountdown(usage.reset_at);
         } else {
@@ -1256,6 +1256,17 @@
         }
       });
 
+
+      // ── Helper: mostra/nascondi manualCsvSection in modo sicuro ─────
+      function showManualCsv() {
+        const el = document.getElementById("manualCsvSection");
+        if (el) el.style.display = "block";
+      }
+      function hideManualCsv() {
+        const el = document.getElementById("manualCsvSection");
+        if (el) el.style.display = "none";
+      }
+
       async function selectPlayer(playerId, name) {
         closeDropdown();
 
@@ -1313,7 +1324,7 @@
               ? `❌ Basketball Reference ha bloccato la richiesta.<br><small>Riprova tra qualche secondo, oppure usa il CSV manuale qui sotto.</small>`
               : `❌ ${data.error}<br><small>Puoi usare il CSV manuale qui sotto.</small>`;
             // Mostra sezione CSV manuale in caso di errore
-            document.getElementById("manualCsvSection").style.display = "block";
+            showManualCsv();
             return;
           }
 
@@ -1323,7 +1334,7 @@
 
           statusEl.style.display = "none";
           // Nascondi sezione CSV dopo caricamento automatico riuscito
-          document.getElementById("manualCsvSection").style.display = "none";
+          hideManualCsv();
 
           const msgEl = document.getElementById("playerLoadedMsg");
           msgEl.innerText = `✅ ${data.player_name} — ${data.games} partite caricate (stagione ${data.season})`;
@@ -1331,9 +1342,14 @@
 
           document.getElementById("btnAnalyze").disabled = false;
         } catch (err) {
+          console.error("[selectPlayer] errore:", err);
           statusEl.style.background = "#fed7d7";
           statusEl.style.color = "#742a2a";
-          statusEl.innerHTML = `❌ Errore di rete: ${err.message}`;
+          statusEl.style.display = "block";
+          statusEl.style.padding = "10px 14px";
+          statusEl.style.borderRadius = "8px";
+          statusEl.innerHTML = `❌ Errore: ${err.message}<br><small>Puoi usare il CSV manuale qui sotto.</small>`;
+          showManualCsv();
         }
       }
 
