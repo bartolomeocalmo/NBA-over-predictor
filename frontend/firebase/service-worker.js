@@ -2,41 +2,25 @@
 // NBA Over Predictor — Service Worker PWA
 // ============================================
 
-const CACHE_NAME = "nba-predictor-v3";
+const CACHE_NAME = "nba-predictor-v4";
 
-// File da cachare per funzionamento offline
-const STATIC_ASSETS = [
-  "/",
-  "/index.html",
-  "/style.css",
-  "/firebase-config.js",
-  "/manifest.json",
-  "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap",
-  "https://cdn.plot.ly/plotly-2.34.0.min.js",
-  "https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js",
-  "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js",
-  "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js",
-];
+// Solo file locali garantiti da cachare
+const STATIC_ASSETS = ["/", "/index.html", "/manifest.json", "/logo.png"];
 
-// ── INSTALL: scarica e salva tutti gli asset statici ──────────────────────
+// ── INSTALL ───────────────────────────────────────────────────────────────
 self.addEventListener("install", (event) => {
   console.log("[SW] Installazione in corso...");
   event.waitUntil(
     caches
       .open(CACHE_NAME)
       .then((cache) => {
-        console.log("[SW] Cache aperta, scarico asset...");
-        // Carica i file locali garantiti, ignora eventuali fallimenti CDN
         return cache.addAll(STATIC_ASSETS).catch((err) => {
-          console.warn(
-            "[SW] Alcuni asset non cachati (probabilmente CDN):",
-            err,
-          );
+          console.warn("[SW] Alcuni asset non cachati:", err);
         });
       })
       .then(() => {
         console.log("[SW] Installazione completata ✅");
-        return self.skipWaiting(); // Attiva subito senza aspettare il refresh
+        return self.skipWaiting();
       }),
   );
 });
@@ -59,84 +43,69 @@ self.addEventListener("activate", (event) => {
       })
       .then(() => {
         console.log("[SW] Attivazione completata ✅");
-        return self.clients.claim(); // Prende controllo di tutte le tab aperte
+        return self.clients.claim();
       }),
   );
 });
 
-// ── FETCH: strategia cache-first per static, network-first per API ────────
+// ── FETCH ─────────────────────────────────────────────────────────────────
 self.addEventListener("fetch", (event) => {
-  const url = new URL(event.request.url);
+  const req = event.request;
+  const url = new URL(req.url);
 
-  // Ignora URL non HTTP (chrome-extension://, ecc.)
-  if (!event.request.url.startsWith("http")) return;
+  // 1. Ignora tutto tranne HTTP/HTTPS
+  if (!req.url.startsWith("http")) return;
 
-  // Chiamate API → sempre dalla rete (mai cachare risposte dinamiche)
-  const isApiCall = [
+  // 2. Ignora tutte le richieste POST (non cachebili)
+  if (req.method !== "GET") return;
+
+  // 3. Ignora domini esterni — Firebase, Google, CDN, etc.
+  //    Lascia passare solo richieste allo stesso dominio
+  const ownOrigin = self.location.origin; // es. https://nbaoverpredictor.it
+  if (url.origin !== ownOrigin) return;
+
+  // 4. Ignora le chiamate API del backend (risposte dinamiche)
+  const API_PATHS = [
     "/predict",
     "/predict_multiple",
     "/calculate_bet",
     "/fetch_player_csv",
     "/search_players",
     "/health",
-    "/stripe/create-checkout",
-    "/paypal/create-order",
-    "/paypal/capture-order",
-    "/config/paypal-client-id",
-    "/webhook/stripe",
-  ].some((path) => url.pathname.startsWith(path));
+    "/stripe/",
+    "/paypal/",
+    "/config/",
+    "/webhook/",
+    "/css/", // CSS dinamici: sempre freschi dalla rete
+  ];
+  if (API_PATHS.some((p) => url.pathname.startsWith(p))) return;
 
-  if (isApiCall) {
-    // Lascia passare le chiamate API direttamente senza intercettarle
-    // Evita falsi "offline" causati da timeout del backend (es. NBA API lenta)
-    return;
-  }
-
-  // Asset statici → prima dalla cache, poi dalla rete
-  event.respondWith(cacheFirst(event.request));
+  // 5. Solo per asset statici same-origin: cache-first
+  event.respondWith(cacheFirst(req));
 });
 
-// ── Strategia: Cache First (per HTML, CSS, JS, fonts) ────────────────────
+// ── Cache First (solo GET same-origin statici) ────────────────────────────
 async function cacheFirst(request) {
   const cached = await caches.match(request);
-  if (cached) {
-    return cached;
-  }
+  if (cached) return cached;
+
   try {
     const networkResponse = await fetch(request);
-    // Salva nella cache solo risposte valide
-    if (networkResponse.ok) {
+    // Salva solo risposte GET valide (non opaque, non errori)
+    if (networkResponse.ok && networkResponse.type !== "opaque") {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, networkResponse.clone());
     }
     return networkResponse;
   } catch {
-    // Se offline e non in cache, mostra pagina offline
     return offlineFallback();
   }
 }
 
-// ── Strategia: Network First (per le API) ─────────────────────────────────
-async function networkFirst(request) {
-  try {
-    const networkResponse = await fetch(request);
-    return networkResponse;
-  } catch {
-    // Se offline, rispondi con errore JSON leggibile dall'app
-    return new Response(
-      JSON.stringify({
-        error: "Sei offline. Connettiti per usare il predittore.",
-      }),
-      { status: 503, headers: { "Content-Type": "application/json" } },
-    );
-  }
-}
-
-// ── Fallback offline minimale ─────────────────────────────────────────────
+// ── Fallback offline ──────────────────────────────────────────────────────
 function offlineFallback() {
   return new Response(
-    `
-    <!DOCTYPE html>
+    `<!DOCTYPE html>
     <html lang="it">
     <head>
       <meta charset="UTF-8">
@@ -149,8 +118,7 @@ function offlineFallback() {
         h1 { font-size: 28px; margin-bottom: 12px; }
         p  { color: #a0a0a0; margin-bottom: 24px; }
         button { padding: 12px 24px; background: #3b82f6; color: white;
-                 border: none; border-radius: 8px; font-size: 16px;
-                 cursor: pointer; }
+                 border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
       </style>
     </head>
     <body>
@@ -161,8 +129,7 @@ function offlineFallback() {
         <button onclick="location.reload()">Riprova</button>
       </div>
     </body>
-    </html>
-  `,
+    </html>`,
     { headers: { "Content-Type": "text/html" } },
   );
 }
