@@ -78,68 +78,203 @@
 
     <!-- LANDING VIEW — mostrata agli utenti non loggati -->
     <div id="landingView" class="view active">
-      <div class="landing-hero">
-        <div class="landing-badge">🏀 Analisi statistica NBA</div>
-        <h1 class="landing-title">Predici le performance<br>dei giocatori NBA</h1>
-        <p class="landing-subtitle">
-          Analizza lo storico di qualsiasi giocatore NBA, calcola la probabilità
-          che superi una soglia di punti e ottimizza lo stake con il metodo Kelly.
-        </p>
-        <button onclick="handleLogin()" class="landing-cta">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-          Accedi con Google — è gratis
+
+      <!-- ── HERO ─────────────────────────────────────── -->
+      <div class="ld-hero">
+        <div class="ld-hero-left">
+          <div class="ld-eyebrow">
+            <span class="ld-live-dot"></span>
+            Analisi statistica NBA in tempo reale
+          </div>
+          <h1 class="ld-h1">
+            Scommetti sull'Over NBA<br>
+            con dati <span class="ld-h1-accent">statistici reali</span>
+          </h1>
+          <p class="ld-lead">
+            Inserisci un giocatore, la soglia punti e la quota del bookmaker.
+            In pochi secondi sai se la scommessa ha <strong>valore statistico</strong>
+            e quanto puntare con il metodo Kelly.
+          </p>
+          <div class="ld-cta-row">
+            <button onclick="handleLogin()" class="ld-btn-primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+              Inizia gratis con Google
+            </button>
+            <span class="ld-cta-note">Nessuna carta richiesta</span>
+          </div>
+          <div class="ld-trust-row">
+            <div class="ld-trust-item">✅ Piano free permanente</div>
+            <div class="ld-trust-item">✅ Dati NBA ufficiali</div>
+            <div class="ld-trust-item">✅ Cancella quando vuoi</div>
+          </div>
+        </div>
+
+        <div class="ld-hero-right">
+          <!-- Mockup analisi -->
+          <div class="ld-mockup">
+            <div class="ld-mockup-header">
+              <div class="ld-mockup-dot" style="background:#ef4444"></div>
+              <div class="ld-mockup-dot" style="background:#f59e0b"></div>
+              <div class="ld-mockup-dot" style="background:#10b981"></div>
+              <span class="ld-mockup-title">Analisi — LeBron James</span>
+            </div>
+            <div class="ld-mockup-body">
+              <div class="ld-mockup-row">
+                <span class="ld-mk-label">Giocatore</span>
+                <span class="ld-mk-value">LeBron James</span>
+              </div>
+              <div class="ld-mockup-row">
+                <span class="ld-mk-label">Soglia Over</span>
+                <span class="ld-mk-value">27.5 punti</span>
+              </div>
+              <div class="ld-mockup-row">
+                <span class="ld-mk-label">Quota bookmaker</span>
+                <span class="ld-mk-value">1.85</span>
+              </div>
+              <div class="ld-mockup-divider"></div>
+              <div class="ld-mockup-result">
+                <div class="ld-result-prob">
+                  <div class="ld-result-num" id="ldAnimProb">0%</div>
+                  <div class="ld-result-lbl">Probabilità Over</div>
+                </div>
+                <div class="ld-result-prob">
+                  <div class="ld-result-num ld-green" id="ldAnimKelly">€0</div>
+                  <div class="ld-result-lbl">Stake Kelly su €100</div>
+                </div>
+              </div>
+              <div class="ld-mockup-bar-wrap">
+                <div class="ld-mockup-bar" id="ldAnimBar"></div>
+              </div>
+              <div class="ld-mockup-verdict" id="ldAnimVerdict">
+                <span class="ld-verdict-badge">⏳ Calcolo...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── COME FUNZIONA ─────────────────────────────── -->
+      <div class="ld-section">
+        <div class="ld-section-label">Come funziona</div>
+        <h2 class="ld-section-title">3 passi, 30 secondi</h2>
+        <div class="ld-steps">
+          <div class="ld-step">
+            <div class="ld-step-num">1</div>
+            <div class="ld-step-icon">🔍</div>
+            <div class="ld-step-title">Cerca il giocatore</div>
+            <div class="ld-step-desc">Digita il nome del giocatore NBA — l'app carica automaticamente lo storico partite della stagione corrente.</div>
+          </div>
+          <div class="ld-step-arrow">→</div>
+          <div class="ld-step">
+            <div class="ld-step-num">2</div>
+            <div class="ld-step-icon">⚙️</div>
+            <div class="ld-step-title">Inserisci soglia e quota</div>
+            <div class="ld-step-desc">Indica la soglia Over (es. 27.5 punti) e la quota offerta dal tuo bookmaker. Il modello ML fa il resto.</div>
+          </div>
+          <div class="ld-step-arrow">→</div>
+          <div class="ld-step">
+            <div class="ld-step-num">3</div>
+            <div class="ld-step-icon">💡</div>
+            <div class="ld-step-title">Ottieni probabilità e stake</div>
+            <div class="ld-step-desc">Vedi la probabilità statistica, se la scommessa ha valore atteso positivo e quanto puntare col metodo Kelly.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── STATS ─────────────────────────────────────── -->
+      <div class="ld-stats-bar">
+        <div class="ld-stat">
+          <div class="ld-stat-num">450+</div>
+          <div class="ld-stat-lbl">Giocatori NBA analizzabili</div>
+        </div>
+        <div class="ld-stat-sep"></div>
+        <div class="ld-stat">
+          <div class="ld-stat-num">ML</div>
+          <div class="ld-stat-lbl">Modello machine learning</div>
+        </div>
+        <div class="ld-stat-sep"></div>
+        <div class="ld-stat">
+          <div class="ld-stat-num">Kelly</div>
+          <div class="ld-stat-lbl">Metodo staking ottimizzato</div>
+        </div>
+        <div class="ld-stat-sep"></div>
+        <div class="ld-stat">
+          <div class="ld-stat-num">€0</div>
+          <div class="ld-stat-lbl">Per iniziare</div>
+        </div>
+      </div>
+
+      <!-- ── PRICING ────────────────────────────────────── -->
+      <div class="ld-section">
+        <div class="ld-section-label">Piani</div>
+        <h2 class="ld-section-title">Semplice e trasparente</h2>
+        <div class="ld-pricing">
+          <div class="ld-plan">
+            <div class="ld-plan-name">Free</div>
+            <div class="ld-plan-price">€0 <span>/ mese</span></div>
+            <div class="ld-plan-desc">Per iniziare e testare il modello</div>
+            <ul class="ld-plan-features">
+              <li><span class="ldf-check">✓</span> Analisi scommessa NBA</li>
+              <li><span class="ldf-check">✓</span> Calcolo stake Kelly</li>
+              <li><span class="ldf-check">✓</span> Storico eventi</li>
+              <li><span class="ldf-limit">⚠</span> 2 progetti al mese</li>
+              <li><span class="ldf-limit">⚠</span> 5 ricerche automatiche / giorno</li>
+            </ul>
+            <button onclick="handleLogin()" class="ld-plan-btn ld-plan-btn-free">Inizia gratis</button>
+          </div>
+
+          <div class="ld-plan ld-plan-premium">
+            <div class="ld-plan-popular">⭐ PIÙ SCELTO</div>
+            <div class="ld-plan-name">Premium</div>
+            <div class="ld-plan-price">€4,90 <span>/ mese</span></div>
+            <div class="ld-plan-desc">Per chi scommette con costanza</div>
+            <ul class="ld-plan-features">
+              <li><span class="ldf-check">✓</span> Tutto del piano Free</li>
+              <li><span class="ldf-check">✓</span> Progetti illimitati</li>
+              <li><span class="ldf-check">✓</span> Ricerche illimitate</li>
+              <li><span class="ldf-check">✓</span> Badge Premium ⭐</li>
+              <li><span class="ldf-check">✓</span> Cancella quando vuoi</li>
+            </ul>
+            <button onclick="window.location='/premium.html'" class="ld-plan-btn ld-plan-btn-premium">Passa a Premium</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── FAQ ───────────────────────────────────────── -->
+      <div class="ld-section">
+        <div class="ld-section-label">FAQ</div>
+        <h2 class="ld-section-title">Domande frequenti</h2>
+        <div class="ld-faqs">
+          <details class="ld-faq">
+            <summary class="ld-faq-q">È legale usare questo strumento in Italia?</summary>
+            <div class="ld-faq-a">Sì. NBA Over Predictor è uno strumento di analisi statistica, non un servizio di scommesse. Fornisce probabilità basate su dati storici per supportare decisioni informate, esattamente come fa un analista sportivo. La responsabilità delle scommesse è sempre dell'utente.</div>
+          </details>
+          <details class="ld-faq">
+            <summary class="ld-faq-q">Come funziona il modello di machine learning?</summary>
+            <div class="ld-faq-a">Il modello analizza lo storico partite del giocatore (punti segnati, minuti giocati, avversario, casa/trasferta) e stima la probabilità che superi la soglia indicata. Viene poi confrontata con la probabilità implicita della quota del bookmaker per valutare se la scommessa ha valore atteso positivo.</div>
+          </details>
+          <details class="ld-faq">
+            <summary class="ld-faq-q">Cosa è il metodo Kelly e perché è utile?</summary>
+            <div class="ld-faq-a">Il criterio di Kelly è una formula matematica che calcola la percentuale ottimale del bankroll da scommettere basandosi sulla probabilità stimata e sulla quota. Evita di over-puntare (che porta a rovina nel lungo periodo) o under-puntare (che riduce i profitti attesi).</div>
+          </details>
+          <details class="ld-faq">
+            <summary class="ld-faq-q">I dati sono aggiornati in tempo reale?</summary>
+            <div class="ld-faq-a">I dati vengono scaricati direttamente dai server NBA tramite API ufficiale al momento della ricerca, quindi riflettono sempre lo storico più aggiornato disponibile per la stagione corrente.</div>
+          </details>
+        </div>
+      </div>
+
+      <!-- ── FINAL CTA ─────────────────────────────────── -->
+      <div class="ld-final-cta">
+        <div class="ld-final-emoji">🏀</div>
+        <h2 class="ld-final-title">Pronto ad analizzare la prossima partita?</h2>
+        <p class="ld-final-sub">Accedi gratis in 10 secondi con il tuo account Google.</p>
+        <button onclick="handleLogin()" class="ld-btn-primary ld-btn-large">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Accedi con Google 
         </button>
-        <p class="landing-note">Nessuna carta richiesta · Piano free disponibile</p>
       </div>
 
-      <div class="landing-features">
-        <div class="landing-feature">
-          <div class="lf-icon">📊</div>
-          <div class="lf-title">Analisi statistica ML</div>
-          <div class="lf-desc">Il modello analizza lo storico partite e calcola la probabilità Over con machine learning.</div>
-        </div>
-        <div class="landing-feature">
-          <div class="lf-icon">💰</div>
-          <div class="lf-title">Metodo Kelly</div>
-          <div class="lf-desc">Stake ottimizzato automaticamente in base alla quota offerta dal bookmaker e alla probabilità stimata.</div>
-        </div>
-        <div class="landing-feature">
-          <div class="lf-icon">📁</div>
-          <div class="lf-title">Gestione progetti</div>
-          <div class="lf-desc">Tieni traccia di tutte le tue analisi, monitora i risultati e storicizza ogni evento.</div>
-        </div>
-        <div class="landing-feature">
-          <div class="lf-icon">⚡</div>
-          <div class="lf-title">Ricerca automatica</div>
-          <div class="lf-desc">Cerca qualsiasi giocatore NBA direttamente nell'app — nessun CSV da scaricare manualmente.</div>
-        </div>
-      </div>
-
-      <div class="landing-plans">
-        <div class="lp-card">
-          <div class="lp-name">Free</div>
-          <div class="lp-price">€0<span>/mese</span></div>
-          <ul class="lp-features">
-            <li>✅ Analisi scommessa NBA</li>
-            <li>✅ Stake Kelly automatico</li>
-            <li>⚠️ 2 progetti al mese</li>
-            <li>⚠️ 3 ricerche / giorno</li>
-          </ul>
-          <button onclick="handleLogin()" class="lp-btn lp-btn-free">Inizia gratis</button>
-        </div>
-        <div class="lp-card lp-featured">
-          <div class="lp-badge">⭐ CONSIGLIATO</div>
-          <div class="lp-name">Premium</div>
-          <div class="lp-price">€4,90<span>/mese</span></div>
-          <ul class="lp-features">
-            <li>✅ Tutto del piano Free</li>
-            <li>✅ Progetti illimitati</li>
-            <li>✅ Ricerche illimitate</li>
-            <li>✅ Badge Premium ⭐</li>
-          </ul>
-          <button onclick="window.location='/premium.html'" class="lp-btn lp-btn-premium">Passa a Premium</button>
-        </div>
-      </div>
     </div>
 
     <!-- DASHBOARD VIEW -->
