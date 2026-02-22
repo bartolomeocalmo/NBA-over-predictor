@@ -771,53 +771,7 @@
         </div>
       </div>
     </div>
-
-    <!-- NEW PROJECT MODAL -->
-    <div id="newProjectModal" class="modal">
-      <div class="modal-content">
-        <h2 style="margin-bottom: 24px">Nuovo Progetto</h2>
-
-        <input
-          type="text"
-          id="projectName"
-          class="form-input"
-          placeholder="Nome progetto (es. Scalata Febbraio)"
-        />
-        <input
-          type="number"
-          id="projectBankroll"
-          class="form-input"
-          placeholder="Bankroll iniziale (€)"
-        />
-        <input
-          type="number"
-          id="projectEvents"
-          class="form-input"
-          placeholder="Numero eventi totali"
-        />
-        <input
-          type="number"
-          id="projectTarget"
-          class="form-input"
-          placeholder="Profitto target (€)"
-        />
-
-        <div style="display: flex; gap: 12px">
-          <button
-            onclick="closeNewProjectModal()"
-            class="btn btn-secondary"
-            style="flex: 1"
-          >
-            Annulla
-          </button>
-          <button onclick="createNewProject()" class="btn" style="flex: 1">
-            Crea Progetto
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <script>
+<script>
       // STATE
       let currentUser = null;
       let userPlan = "free"; // "free" | "premium"
@@ -908,16 +862,13 @@
       }
 
       async function updateSearchLimitUI() {
-        // Helper null-safe
-        const $id = (id) => document.getElementById(id);
-
-        // Se elementi non esistono nel DOM (es. predictorView non ancora visibile), esci silenziosamente
-        if (!$id("searchLimitBar")) return;
+        const $g = (id) => document.getElementById(id);
+        if (!$g("searchLimitBar")) return; // predictorView non ancora visibile
 
         if (userPlan === "premium") {
-          $id("searchLimitBar").style.display = "none";
-          $id("searchLimitBanner").style.display = "none";
-          if ($id("playerSearchInput")) $id("playerSearchInput").disabled = false;
+          $g("searchLimitBar").style.display = "none";
+          $g("searchLimitBanner").style.display = "none";
+          if ($g("playerSearchInput")) $g("playerSearchInput").disabled = false;
           return;
         }
 
@@ -926,45 +877,38 @@
         const isExpired = now >= (usage.reset_at || 0);
         const used = isExpired ? 0 : usage.count || 0;
         const remaining = FREE_SEARCHES_PER_DAY - used;
-        const limitBar = $id("searchLimitBar");
-        const limitBanner = $id("searchLimitBanner");
+        const limitBar    = $g("searchLimitBar");
+        const limitBanner = $g("searchLimitBanner");
 
         if (remaining <= 0) {
-          // Ricerche esaurite
-          if (limitBar) limitBar.style.display = "none";
+          if (limitBar)    limitBar.style.display = "none";
           if (limitBanner) limitBanner.style.display = "flex";
-          if ($id("playerSearchInput")) {
-            $id("playerSearchInput").disabled = true;
-            $id("playerSearchInput").placeholder = "Ricerche esaurite — usa il CSV manuale";
+          if ($g("playerSearchInput")) {
+            $g("playerSearchInput").disabled = true;
+            $g("playerSearchInput").placeholder = "Ricerche esaurite — usa il CSV manuale";
           }
-          // Mostra sezione CSV manuale
           showManualCsv();
-          // Countdown
           startSearchCountdown(usage.reset_at);
         } else {
           if (limitBanner) limitBanner.style.display = "none";
-          if (limitBar) limitBar.style.display = "flex";
-          if ($id("playerSearchInput")) {
-            $id("playerSearchInput").disabled = false;
-            $id("playerSearchInput").placeholder = "Es. LeBron, Curry, Wembanyama...";
+          if (limitBar)    limitBar.style.display = "flex";
+          if ($g("playerSearchInput")) {
+            $g("playerSearchInput").disabled = false;
+            $g("playerSearchInput").placeholder = "Es. LeBron, Curry, Wembanyama...";
           }
-          // Dots
-          const dotsEl = $id("searchDots");
+          const dotsEl = $g("searchDots");
           if (dotsEl) {
             dotsEl.innerHTML = "";
             for (let i = 0; i < FREE_SEARCHES_PER_DAY; i++) {
               const dot = document.createElement("div");
-              const isUsed = i < used;
-              const isLast = remaining === 1 && i === used;
-              dot.className = "dot " + (isUsed ? "used" : isLast ? "last" : "");
+              dot.className = "dot " + (i < used ? "used" : (remaining === 1 && i === used ? "last" : ""));
               dotsEl.appendChild(dot);
             }
           }
-          if ($id("searchLimitText")) {
-            $id("searchLimitText").innerText =
-              remaining === 1
-                ? "⚠️ Ultima ricerca automatica rimasta oggi"
-                : `${remaining} ricerch${remaining === 1 ? "a" : "e"} automatich${remaining === 1 ? "a" : "e"} rimast${remaining === 1 ? "a" : "e"} oggi`;
+          if ($g("searchLimitText")) {
+            $g("searchLimitText").innerText = remaining === 1
+              ? "⚠️ Ultima ricerca automatica rimasta oggi"
+              : `${remaining} ricerche automatiche rimaste oggi`;
           }
         }
       }
@@ -1301,9 +1245,13 @@
         closeDropdown();
 
         // ── CONTROLLO LIMITE RICERCHE (solo free) ──
-        if (!(await canSearch())) {
-          await updateSearchLimitUI();
-          return;
+        try {
+          if (!(await canSearch())) {
+            try { await updateSearchLimitUI(); } catch(_) {}
+            return;
+          }
+        } catch(e) {
+          console.warn("[selectPlayer] canSearch errore, procedo:", e);
         }
 
         selectedPlayerId = playerId;
@@ -2297,13 +2245,20 @@
       // PWA — Registrazione Service Worker
       // ============================================
       if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker
-            .register("/service-worker.js")
-            .then((reg) =>
-              console.log("[PWA] Service Worker registrato ✅", reg.scope),
-            )
-            .catch((err) => console.warn("[PWA] Registrazione fallita:", err));
+        window.addEventListener("load", async () => {
+          try {
+            // Rimuovi tutti i vecchi service worker prima di registrare il nuovo
+            const regs = await navigator.serviceWorker.getRegistrations();
+            for (const reg of regs) {
+              const swUrl = reg.active?.scriptURL || "";
+              // Forza re-registrazione se il cache name non è aggiornato
+              await reg.update();
+            }
+            const reg = await navigator.serviceWorker.register("/service-worker.js");
+            console.log("[PWA] Service Worker registrato ✅", reg.scope);
+          } catch (err) {
+            console.warn("[PWA] Registrazione SW fallita:", err);
+          }
         });
       }
     </script>
@@ -2352,4 +2307,51 @@
       </p>
     </footer>
   </body>
-</html>
+</html
+
+    <!-- MODAL (fuori da tutti i view, sempre nel DOM) -->
+    <!-- NEW PROJECT MODAL -->
+    <div id="newProjectModal" class="modal">
+      <div class="modal-content">
+        <h2 style="margin-bottom: 24px">Nuovo Progetto</h2>
+
+        <input
+          type="text"
+          id="projectName"
+          class="form-input"
+          placeholder="Nome progetto (es. Scalata Febbraio)"
+        />
+        <input
+          type="number"
+          id="projectBankroll"
+          class="form-input"
+          placeholder="Bankroll iniziale (€)"
+        />
+        <input
+          type="number"
+          id="projectEvents"
+          class="form-input"
+          placeholder="Numero eventi totali"
+        />
+        <input
+          type="number"
+          id="projectTarget"
+          class="form-input"
+          placeholder="Profitto target (€)"
+        />
+
+        <div style="display: flex; gap: 12px">
+          <button
+            onclick="closeNewProjectModal()"
+            class="btn btn-secondary"
+            style="flex: 1"
+          >
+            Annulla
+          </button>
+          <button onclick="createNewProject()" class="btn" style="flex: 1">
+            Crea Progetto
+          </button>
+        </div>
+      </div>
+    </div>
+>
