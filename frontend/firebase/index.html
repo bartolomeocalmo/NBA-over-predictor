@@ -1248,91 +1248,105 @@
       async function selectPlayer(playerId, name) {
         closeDropdown();
 
-        // ── CONTROLLO LIMITE RICERCHE (solo free) ──
-        try {
-          if (!(await canSearch())) {
-            try { await updateSearchLimitUI(); } catch(_) {}
-            return;
-          }
-        } catch(e) {
-          console.warn("[selectPlayer] canSearch errore, procedo:", e);
+        // Elemento status — mostrato durante tutto il processo
+        const statusEl = document.getElementById("playerSearchStatus");
+
+        function setStatus(msg, type) {
+          // type: 'loading' | 'success' | 'error'
+          const colors = {
+            loading: { bg: "#bee3f8", color: "#2c5282" },
+            success: { bg: "#c6f6d5", color: "#22543d" },
+            error:   { bg: "#fed7d7", color: "#742a2a" },
+          };
+          const c = colors[type] || colors.loading;
+          statusEl.style.display    = "block";
+          statusEl.style.background = c.bg;
+          statusEl.style.color      = c.color;
+          statusEl.style.padding    = "10px 14px";
+          statusEl.style.borderRadius = "8px";
+          statusEl.style.fontSize   = "14px";
+          statusEl.style.marginTop  = "10px";
+          statusEl.innerHTML = msg;
+        }
+
+        // ── Controllo limite ──────────────────────────────────────
+        let allowed = true;
+        try { allowed = await canSearch(); } catch(e) { allowed = true; }
+        if (!allowed) {
+          try { await updateSearchLimitUI(); } catch(_) {}
+          return;
         }
 
         selectedPlayerId = playerId;
-        document.getElementById("playerSearchInput").value = name;
+        if (document.getElementById("playerSearchInput"))
+          document.getElementById("playerSearchInput").value = name;
 
-        // Reset stato precedente
+        // Reset UI
         currentCSV = null;
         currentPlayerName = null;
-        document.getElementById("playerLoadedMsg").style.display = "none";
-        document.getElementById("btnAnalyze").disabled = true;
-        document.getElementById("analysisResult").style.display = "none";
+        const loadedMsg = document.getElementById("playerLoadedMsg");
+        if (loadedMsg) { loadedMsg.style.display = "none"; loadedMsg.innerText = ""; }
+        const btnAnalyze = document.getElementById("btnAnalyze");
+        if (btnAnalyze) btnAnalyze.disabled = true;
+        const analysisResult = document.getElementById("analysisResult");
+        if (analysisResult) analysisResult.style.display = "none";
         hideError();
+        hideManualCsv();
 
-        // Incrementa contatore (con try/catch per non bloccare se Firestore dà errore)
-        try { await incrementSearchUsage(); } catch(e) { console.warn("[usage] increment fallito:", e); }
-        try { await updateSearchLimitUI(); } catch(e) { console.warn("[usage] updateUI fallito:", e); }
+        // Incrementa contatore
+        try { await incrementSearchUsage(); } catch(e) { console.warn("[usage]", e); }
+        try { await updateSearchLimitUI(); } catch(e) {}
 
-        // Mostra spinner
-        const statusEl = document.getElementById("playerSearchStatus");
-        statusEl.style.display = "block";
-        statusEl.style.background = "#bee3f8";
-        statusEl.style.color = "#2c5282";
-        statusEl.style.padding = "10px 14px";
-        statusEl.style.borderRadius = "8px";
-        statusEl.style.fontSize = "14px";
-        statusEl.innerHTML = `⏳ Scaricando dati di <strong>${name}</strong> da NBA API...`;
+        // ── Fetch dati giocatore ─────────────────────────────────
+        setStatus(`⏳ Scaricando dati di <strong>${name}</strong> dalla NBA API...`, "loading");
 
+        let data;
         try {
           const res = await fetch("/fetch_player_csv", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              player_id: playerId,
-              player_name: name,
-              season: "2026",
-            }),
+            body: JSON.stringify({ player_id: playerId, player_name: name, season: "2026" }),
           });
 
-          const data = await res.json();
-
-          if (data.error) {
-            statusEl.style.background = "#fed7d7";
-            statusEl.style.color = "#742a2a";
-            // Messaggio più chiaro per il 403
-            const is403 =
-              data.error.includes("403") || data.error.includes("bloccato");
-            statusEl.innerHTML = is403
-              ? `❌ Basketball Reference ha bloccato la richiesta.<br><small>Riprova tra qualche secondo, oppure usa il CSV manuale qui sotto.</small>`
-              : `❌ ${data.error}<br><small>Puoi usare il CSV manuale qui sotto.</small>`;
-            // Mostra sezione CSV manuale in caso di errore
+          if (!res.ok) {
+            setStatus(`❌ Errore server (${res.status}). Prova il CSV manuale.`, "error");
             showManualCsv();
             return;
           }
 
-          // Successo
-          currentCSV = data.csv;
-          currentPlayerName = data.player_name;
-
-          statusEl.style.display = "none";
-          // Nascondi sezione CSV dopo caricamento automatico riuscito
-          hideManualCsv();
-
-          const msgEl = document.getElementById("playerLoadedMsg");
-          msgEl.innerText = `✅ ${data.player_name} — ${data.games} partite caricate (stagione ${data.season})`;
-          msgEl.style.display = "block";
-
-          document.getElementById("btnAnalyze").disabled = false;
+          data = await res.json();
         } catch (err) {
-          console.error("[selectPlayer] errore:", err);
-          statusEl.style.background = "#fed7d7";
-          statusEl.style.color = "#742a2a";
-          statusEl.style.display = "block";
-          statusEl.style.padding = "10px 14px";
-          statusEl.style.borderRadius = "8px";
-          statusEl.innerHTML = `❌ Errore: ${err.message}<br><small>Puoi usare il CSV manuale qui sotto.</small>`;
+          console.error("[fetch_player_csv] errore di rete:", err);
+          setStatus(`❌ Errore di rete: ${err.message}<br><small>Controlla la connessione o usa il CSV manuale.</small>`, "error");
           showManualCsv();
+          return;
         }
+
+        // ── Risposta con errore dal backend ──────────────────────
+        if (data.error) {
+          const is403 = data.error.includes("403") || data.error.includes("bloccato");
+          setStatus(
+            is403
+              ? `❌ Basketball Reference ha bloccato la richiesta.<br><small>Riprova tra qualche secondo o usa il CSV manuale.</small>`
+              : `❌ ${data.error}<br><small>Puoi usare il CSV manuale qui sotto.</small>`,
+            "error"
+          );
+          showManualCsv();
+          return;
+        }
+
+        // ── Successo ─────────────────────────────────────────────
+        currentCSV         = data.csv;
+        currentPlayerName  = data.player_name;
+
+        setStatus(`✅ ${data.player_name} — ${data.games} partite caricate (stagione ${data.season})`, "success");
+        hideManualCsv();
+
+        if (loadedMsg) {
+          loadedMsg.innerText      = `✅ ${data.player_name} — ${data.games} partite caricate`;
+          loadedMsg.style.display  = "block";
+        }
+        if (btnAnalyze) btnAnalyze.disabled = false;
       }
 
       // PROJECTS
