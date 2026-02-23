@@ -154,129 +154,65 @@
       </div>
 
 
-      <!-- ── PROBLEMA ─────────────────────────────────── -->
-      <div class="ld-section ld-problem-section">
-        <div class="ld-section-label">Il problema</div>
-        <h2 class="ld-section-title">Scommetti a occhio?</h2>
-        <p class="ld-problem-sub">La maggior parte dei giocatori perde nel lungo periodo non perché sfortuna — ma perché ignora la statistica.</p>
-        <div class="ld-problem-grid">
-          <div class="ld-problem-card bad">
-            <div class="ld-prob-icon">❌</div>
-            <div class="ld-prob-label">Senza NBA Over Predictor</div>
-            <ul class="ld-prob-list">
-              <li>Scommetti in base all'istinto o alla forma recente</li>
-              <li>Non sai se la quota del bookmaker ha valore atteso</li>
-              <li>Puni troppo o troppo poco senza criterio</li>
-              <li>Perdi il bankroll senza capire perché</li>
-            </ul>
-          </div>
-          <div class="ld-problem-vs">VS</div>
-          <div class="ld-problem-card good">
-            <div class="ld-prob-icon">✅</div>
-            <div class="ld-prob-label">Con NBA Over Predictor</div>
-            <ul class="ld-prob-list">
-              <li>Probabilità statistica basata su storico reale NBA</li>
-              <li>Sai esattamente se la quota ha valore atteso positivo</li>
-              <li>Stake calcolato con il metodo Kelly ottimizzato</li>
-              <li>Bankroll gestito in modo matematico e disciplinato</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
       <!-- ── COME FUNZIONA ─────────────────────────────── -->
       <div class="ld-section">
-        <div class="ld-section-label">Come funziona</div>
-        <h2 class="ld-section-title">3 passi, 30 secondi</h2>
+        <div class="ld-section-label">Il metodo</div>
+        <h2 class="ld-section-title">Inizia a scommettere con criterio</h2>
+        <p class="ld-problem-sub">Smetti di affidarti all'istinto. Le scommesse vincenti nel lungo periodo sono quelle dove la probabilità reale supera quella implicita nella quota — e dove punti la giusta percentuale del tuo bankroll.</p>
         <div class="ld-steps">
           <div class="ld-step">
             <div class="ld-step-num">1</div>
             <div class="ld-step-icon">🔍</div>
-            <div class="ld-step-title">Cerca il giocatore</div>
-            <div class="ld-step-desc">Digita il nome del giocatore NBA — l'app carica automaticamente lo storico partite della stagione corrente.</div>
+            <div class="ld-step-title">Trova la probabilità reale</div>
+            <div class="ld-step-desc">Cerca il giocatore: l'app analizza lo storico della stagione e calcola staticamente quante volte ha superato quella soglia di punti.</div>
           </div>
           <div class="ld-step-arrow">→</div>
           <div class="ld-step">
             <div class="ld-step-num">2</div>
-            <div class="ld-step-icon">⚙️</div>
-            <div class="ld-step-title">Inserisci soglia e quota</div>
-            <div class="ld-step-desc">Indica la soglia Over (es. 27.5 punti) e la quota offerta dal tuo bookmaker. Il modello ML fa il resto.</div>
+            <div class="ld-step-icon">⚖️</div>
+            <div class="ld-step-title">Confronta con la quota</div>
+            <div class="ld-step-desc">Inserisci la quota del bookmaker. Se la nostra probabilità è più alta di quella implicita nella quota, la scommessa ha <strong>valore atteso positivo</strong>.</div>
           </div>
           <div class="ld-step-arrow">→</div>
           <div class="ld-step">
             <div class="ld-step-num">3</div>
             <div class="ld-step-icon">💡</div>
-            <div class="ld-step-title">Ottieni probabilità e stake</div>
-            <div class="ld-step-desc">Vedi la probabilità statistica, se la scommessa ha valore atteso positivo e quanto puntare col metodo Kelly.</div>
+            <div class="ld-step-title">Punta con il Kelly</div>
+            <div class="ld-step-desc">Il metodo Kelly calcola esattamente quanto del tuo bankroll rischiare per massimizzare la crescita nel lungo periodo, evitando di bruciarlo in poche serate.</div>
           </div>
         </div>
       </div>
 
-
-      <!-- ── ESEMPIO OUTPUT ───────────────────────────── -->
-      <div class="ld-section ld-esempio-section">
-        <div class="ld-section-label">Output reale</div>
-        <h2 class="ld-section-title">Ecco cosa vedi dopo l'analisi</h2>
-        <p class="ld-problema-sub" style="text-align:center; margin-bottom:32px;">Una card chiara, nessun gergo inutile. Tutto quello che ti serve per decidere.</p>
-        <div class="ld-esempio-wrap">
-          <!-- Card statica esempio -->
-          <div class="ld-mockup ld-esempio-card" style="max-width:420px; margin:0 auto; animation:none;">
-            <div class="ld-mockup-header">
-              <div class="ld-mockup-dot" style="background:#ef4444"></div>
-              <div class="ld-mockup-dot" style="background:#f59e0b"></div>
-              <div class="ld-mockup-dot" style="background:#10b981"></div>
-              <span class="ld-mockup-title">Analisi — Stephen Curry</span>
-            </div>
-            <div class="ld-mockup-body">
-              <div class="ld-mockup-row">
-                <span class="ld-mk-label">Giocatore</span>
-                <span class="ld-mk-value">Stephen Curry</span>
-              </div>
-              <div class="ld-mockup-row">
-                <span class="ld-mk-label">Soglia Over</span>
-                <span class="ld-mk-value">24.5 punti</span>
-              </div>
-              <div class="ld-mockup-row">
-                <span class="ld-mk-label">Quota bookmaker</span>
-                <span class="ld-mk-value">1.90</span>
-              </div>
-              <div class="ld-mockup-row">
-                <span class="ld-mk-label">Affidabilità</span>
-                <span class="ld-mk-value" style="color:#10b981">🟢 Alta</span>
-              </div>
-              <div class="ld-mockup-divider"></div>
-              <div class="ld-mockup-result">
-                <div class="ld-result-prob">
-                  <div class="ld-result-num">71%</div>
-                  <div class="ld-result-lbl">Probabilità Over</div>
-                </div>
-                <div class="ld-result-prob">
-                  <div class="ld-result-num ld-green">€8.40</div>
-                  <div class="ld-result-lbl">Stake Kelly su €100</div>
-                </div>
-              </div>
-              <div class="ld-mockup-bar-wrap">
-                <div class="ld-mockup-bar" style="width:71%; background:linear-gradient(90deg,#f59e0b,#10b981)"></div>
-              </div>
-              <div class="ld-mockup-verdict">
-                <span class="ld-verdict-badge" style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);">✅ Valore Positivo</span>
-              </div>
-              <!-- Annotazioni callout -->
-            </div>
+      <!-- ── KELLY SPIEGATO ─────────────────────────────── -->
+      <div class="ld-section ld-kelly-section">
+        <div class="ld-kelly-wrap">
+          <div class="ld-kelly-left">
+            <div class="ld-section-label">Perché il Kelly</div>
+            <h2 class="ld-kelly-title">Il metodo che usano i trader professionisti</h2>
+            <p class="ld-kelly-text">Il <strong>criterio di Kelly</strong> è una formula matematica nata nel 1956, usata da hedge fund, trader quantitativi e scommettitori professionisti di tutto il mondo.</p>
+            <p class="ld-kelly-text">L'idea è semplice: se hai un vantaggio su una scommessa, esiste una percentuale ottimale del tuo capitale da rischiare. Puntare di più ti espone alla rovina; puntare di meno lascia profitti sul tavolo.</p>
+            <p class="ld-kelly-text">NBA Over Predictor calcola questa percentuale per ogni analisi, adattandola al tuo bankroll attuale e al numero di scommesse rimanenti nel progetto.</p>
           </div>
-          <!-- Callout laterali -->
-          <div class="ld-esempio-callouts">
-            <div class="ld-callout">
-              <div class="ld-callout-arrow">←</div>
-              <div class="ld-callout-text"><strong>Probabilità ML</strong><br>Calcolata su 39 partite stagionali con regressione logistica</div>
-            </div>
-            <div class="ld-callout">
-              <div class="ld-callout-arrow">←</div>
-              <div class="ld-callout-text"><strong>Stake Kelly</strong><br>Percentuale ottimale di bankroll secondo il criterio di Kelly</div>
-            </div>
-            <div class="ld-callout">
-              <div class="ld-callout-arrow">←</div>
-              <div class="ld-callout-text"><strong>Verdict immediato</strong><br>Verde = valore atteso positivo. Rosso = evita la scommessa.</div>
+          <div class="ld-kelly-right">
+            <div class="ld-kelly-card">
+              <div class="ld-kelly-example-label">Esempio pratico</div>
+              <div class="ld-kelly-row">
+                <span>Probabilità stimata</span><strong>64%</strong>
+              </div>
+              <div class="ld-kelly-row">
+                <span>Quota bookmaker</span><strong>1.90</strong>
+              </div>
+              <div class="ld-kelly-row">
+                <span>Prob. implicita quota</span><strong>53%</strong>
+              </div>
+              <div class="ld-kelly-divider"></div>
+              <div class="ld-kelly-row ld-kelly-highlight">
+                <span>Vantaggio stimato</span><strong>+11%</strong>
+              </div>
+              <div class="ld-kelly-row ld-kelly-result">
+                <span>Stake consigliato su €200</span><strong class="ld-kelly-stake">€14.20</strong>
+              </div>
+              <div class="ld-kelly-note">Non troppo, non troppo poco. Matematicamente ottimale.</div>
             </div>
           </div>
         </div>
