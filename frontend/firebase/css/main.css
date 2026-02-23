@@ -1804,3 +1804,219 @@ details[open] summary {
     font-size: 16px;
   }
 }
+
+/* ============================================================
+   LANDING — Sezioni aggiuntive (problema, esempio, testimonianze)
+   ============================================================ */
+
+/* Problema */
+.ld-problem-section {
+  padding-top: 16px;
+}
+.ld-problem-sub {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 16px;
+  margin-bottom: 36px;
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.ld-problem-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 20px;
+  align-items: center;
+  max-width: 860px;
+  margin: 0 auto;
+}
+.ld-problem-vs {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 0 8px;
+}
+.ld-problem-card {
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  border: 1px solid var(--border-color);
+}
+.ld-problem-card.bad {
+  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+.ld-problem-card.good {
+  background: rgba(16, 185, 129, 0.06);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+.ld-prob-icon {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+.ld-prob-label {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 14px;
+  color: var(--text-primary);
+}
+.ld-prob-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ld-prob-list li {
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding-left: 16px;
+  position: relative;
+  line-height: 1.45;
+}
+.ld-prob-list li::before {
+  content: "·";
+  position: absolute;
+  left: 0;
+  color: var(--text-muted);
+}
+
+/* Esempio output */
+.ld-esempio-section {
+  padding-bottom: 8px;
+}
+.ld-esempio-wrap {
+  display: flex;
+  gap: 36px;
+  align-items: flex-start;
+  max-width: 820px;
+  margin: 0 auto;
+}
+.ld-esempio-callouts {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding-top: 80px;
+  flex: 1;
+}
+.ld-callout {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.ld-callout-arrow {
+  font-size: 18px;
+  color: #3b82f6;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.ld-callout-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.ld-callout-text strong {
+  color: var(--text-primary);
+}
+
+/* Testimonianze */
+.ld-testimonials {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 960px;
+  margin: 0 auto 16px;
+}
+.ld-testimonial {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: transform 0.2s;
+}
+.ld-testimonial:hover {
+  transform: translateY(-3px);
+}
+.ld-testi-stars {
+  color: #f59e0b;
+  font-size: 15px;
+  letter-spacing: 2px;
+}
+.ld-testi-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  font-style: italic;
+  flex: 1;
+}
+.ld-testi-author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ld-testi-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  color: white;
+  flex-shrink: 0;
+}
+.ld-testi-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+.ld-testi-role {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.ld-testi-disclaimer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  max-width: 500px;
+  margin: 4px auto 0;
+}
+
+/* Responsive nuove sezioni */
+@media (max-width: 700px) {
+  .ld-problem-grid {
+    grid-template-columns: 1fr;
+  }
+  .ld-problem-vs {
+    display: none;
+  }
+  .ld-testimonials {
+    grid-template-columns: 1fr;
+  }
+  .ld-esempio-wrap {
+    flex-direction: column;
+  }
+  .ld-esempio-callouts {
+    padding-top: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .ld-callout {
+    flex: 1;
+    min-width: 150px;
+  }
+  .ld-callout-arrow {
+    display: none;
+  }
+}
+@media (max-width: 900px) and (min-width: 701px) {
+  .ld-testimonials {
+    grid-template-columns: 1fr 1fr;
+  }
+}
