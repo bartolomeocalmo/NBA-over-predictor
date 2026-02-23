@@ -582,173 +582,97 @@
             🔍 ANALIZZA SCOMMESSA
           </button>
 
-          <!-- ANALYSIS RESULT -->
-          <div id="analysisResult" style="display: none; margin-top: 24px">
-            <!-- Probability -->
-            <div
-              style="
-                padding: 20px;
-                background: #f7fafc;
-                border-radius: 12px;
-                margin-bottom: 16px;
-              "
-            >
-              <div style="text-align: center; margin-bottom: 16px">
-                <div
-                  style="font-size: 48px; font-weight: 800; color: #667eea"
-                  id="probResult"
-                >
-                  --
+          <!-- ANALYSIS RESULT — stile mockup card -->
+          <div id="analysisResult" style="display: none; margin-top: 28px">
+
+            <!-- Damage control warning (inserito via JS se necessario) -->
+
+            <div class="ld-mockup" style="max-width: 100%; animation: none;">
+              <!-- Header macOS dots -->
+              <div class="ld-mockup-header">
+                <div class="ld-mockup-dot" style="background:#ef4444"></div>
+                <div class="ld-mockup-dot" style="background:#f59e0b"></div>
+                <div class="ld-mockup-dot" style="background:#10b981"></div>
+                <span class="ld-mockup-title" id="mockupTitle">Analisi</span>
+              </div>
+
+              <div class="ld-mockup-body">
+                <!-- Riepilogo input -->
+                <div class="ld-mockup-row">
+                  <span class="ld-mk-label">Giocatore</span>
+                  <span class="ld-mk-value" id="recapPlayer">—</span>
                 </div>
-                <div style="font-size: 16px; color: #718096" id="probLabel">
-                  Probabilità OVER
+                <div class="ld-mockup-row">
+                  <span class="ld-mk-label">Soglia Over</span>
+                  <span class="ld-mk-value" id="recapThreshold">—</span>
                 </div>
-                <div
-                  style="
-                    font-size: 14px;
-                    margin-top: 8px;
-                    padding: 6px 12px;
-                    border-radius: 8px;
-                    display: inline-block;
-                  "
-                  id="confidenceBadge"
-                >
-                  --
+                <div class="ld-mockup-row">
+                  <span class="ld-mk-label">Quota bookmaker</span>
+                  <span class="ld-mk-value" id="recapOdds">—</span>
+                </div>
+                <div class="ld-mockup-row">
+                  <span class="ld-mk-label">Affidabilità</span>
+                  <span class="ld-mk-value" id="confidenceBadge">—</span>
+                </div>
+
+                <div class="ld-mockup-divider"></div>
+
+                <!-- Risultati principali -->
+                <div class="ld-mockup-result">
+                  <div class="ld-result-prob">
+                    <div class="ld-result-num" id="probResult">—</div>
+                    <div class="ld-result-lbl" id="probLabel">Probabilità Over</div>
+                  </div>
+                  <div class="ld-result-prob" id="stakeDisplay" style="display:none">
+                    <div class="ld-result-num ld-green" id="autoStake">—</div>
+                    <div class="ld-result-lbl" id="stakeInfo">Stake Kelly</div>
+                  </div>
+                </div>
+
+                <!-- Barra probabilità -->
+                <div class="ld-mockup-bar-wrap">
+                  <div class="ld-mockup-bar" id="resultBar"></div>
+                </div>
+
+                <!-- Mini stats (vincita / ROI / % bankroll) — solo se consigliata -->
+                <div id="miniStats" style="display:none; display:none; margin: 10px 0; gap: 0">
+                  <div style="display:grid; grid-template-columns: repeat(3,1fr); gap:8px; margin-bottom:12px;">
+                    <div style="text-align:center; background:rgba(255,255,255,0.05); border-radius:8px; padding:8px 4px;">
+                      <div style="font-size:11px; color:var(--text-muted); margin-bottom:3px;">Vincita pot.</div>
+                      <div style="font-size:15px; font-weight:700; color:#10b981;" id="potentialWin">—</div>
+                    </div>
+                    <div style="text-align:center; background:rgba(255,255,255,0.05); border-radius:8px; padding:8px 4px;">
+                      <div style="font-size:11px; color:var(--text-muted); margin-bottom:3px;">ROI</div>
+                      <div style="font-size:15px; font-weight:700; color:#3b82f6;" id="potentialROI">—</div>
+                    </div>
+                    <div style="text-align:center; background:rgba(255,255,255,0.05); border-radius:8px; padding:8px 4px;">
+                      <div style="font-size:11px; color:var(--text-muted); margin-bottom:3px;">% Bankroll</div>
+                      <div style="font-size:15px; font-weight:700; color:#a78bfa;" id="stakePercentage">—</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Verdict / bottone -->
+                <div id="betDecision">
+                  <!-- Verdict badge e bottone inseriti via JS -->
+                  <div class="ld-mockup-verdict" id="verdictWrap">
+                    <span class="ld-verdict-badge" id="decisionTitle">⏳ Calcolo...</span>
+                  </div>
+                  <div id="decisionReason" style="font-size:12px; color:var(--text-muted); margin-top:6px; text-align:center;"></div>
+
+                  <!-- Bottone aggiungi al progetto -->
+                  <button
+                    onclick="confirmAndAddEvent()"
+                    id="btnConfirmEvent"
+                    class="btn-primary-full"
+                    style="display:none; margin-top:14px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);"
+                  >
+                    ✅ Aggiungi al Progetto
+                  </button>
                 </div>
               </div>
             </div>
 
-            <!-- Decision -->
-            <div
-              id="betDecision"
-              style="
-                padding: 24px;
-                border-radius: 12px;
-                margin-bottom: 16px;
-                color: white;
-              "
-            >
-              <div style="text-align: center">
-                <div
-                  style="font-size: 28px; font-weight: 800; margin-bottom: 12px"
-                  id="decisionTitle"
-                >
-                  --
-                </div>
-                <div
-                  style="font-size: 14px; margin-bottom: 20px; opacity: 0.95"
-                  id="decisionReason"
-                >
-                  --
-                </div>
-
-                <!-- Auto Stake Display -->
-                <div id="stakeDisplay" style="display: none">
-                  <div
-                    style="
-                      padding: 24px;
-                      background: rgba(255, 255, 255, 0.95);
-                      border-radius: 12px;
-                      margin-bottom: 16px;
-                      color: #2d3748;
-                    "
-                  >
-                    <div
-                      style="
-                        font-size: 14px;
-                        color: var(--text-secondary);
-                        margin-bottom: 8px;
-                      "
-                    >
-                      💰 STAKE CALCOLATO AUTOMATICAMENTE
-                    </div>
-                    <div
-                      style="font-size: 56px; font-weight: 800; color: #48bb78"
-                      id="autoStake"
-                    >
-                      --
-                    </div>
-                    <div
-                      style="
-                        font-size: 13px;
-                        color: var(--text-secondary);
-                        margin-top: 8px;
-                      "
-                      id="stakeInfo"
-                    >
-                      --
-                    </div>
-                  </div>
-
-                  <div
-                    style="
-                      display: grid;
-                      grid-template-columns: repeat(3, 1fr);
-                      gap: 12px;
-                      padding: 16px;
-                      background: rgba(255, 255, 255, 0.8);
-                      border-radius: 8px;
-                      color: #2d3748;
-                    "
-                  >
-                    <div style="text-align: center">
-                      <div style="font-size: 12px; color: #718096">Vincita</div>
-                      <div
-                        style="
-                          font-size: 22px;
-                          font-weight: 700;
-                          color: #48bb78;
-                        "
-                        id="potentialWin"
-                      >
-                        --
-                      </div>
-                    </div>
-                    <div style="text-align: center">
-                      <div style="font-size: 12px; color: #718096">ROI</div>
-                      <div
-                        style="
-                          font-size: 22px;
-                          font-weight: 700;
-                          color: #667eea;
-                        "
-                        id="potentialROI"
-                      >
-                        --
-                      </div>
-                    </div>
-                    <div style="text-align: center">
-                      <div style="font-size: 12px; color: #718096">
-                        % Bankroll
-                      </div>
-                      <div
-                        style="
-                          font-size: 22px;
-                          font-weight: 700;
-                          color: #764ba2;
-                        "
-                        id="stakePercentage"
-                      >
-                        --
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Confirm Button -->
-            <button
-              onclick="confirmAndAddEvent()"
-              id="btnConfirmEvent"
-              class="btn-primary-full"
-              style="
-                display: none;
-                background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-              "
-            >
-              ✅ CONFERMA E AGGIUNGI AL PROGETTO
-            </button>
           </div>
         </div>
 
@@ -1856,8 +1780,18 @@
       async function analyzeAutomaticBet() {
         // RESET risultati analisi precedente
         document.getElementById("analysisResult").style.display = "none";
-        document.getElementById("stakeDisplay").style.display = "none";
-        document.getElementById("btnConfirmEvent").style.display = "none";
+        const _sd = document.getElementById("stakeDisplay");
+        if (_sd) _sd.style.display = "none";
+        const _bc = document.getElementById("btnConfirmEvent");
+        if (_bc) _bc.style.display = "none";
+        const _ms = document.getElementById("miniStats");
+        if (_ms) _ms.style.display = "none";
+        const _bar = document.getElementById("resultBar");
+        if (_bar) { _bar.style.width = "0%"; }
+        const _dt = document.getElementById("decisionTitle");
+        if (_dt) { _dt.innerText = "⏳ Calcolo..."; _dt.removeAttribute("style"); }
+        const _dr = document.getElementById("decisionReason");
+        if (_dr) _dr.innerText = "";
         currentProbability = null;
         currentConfidence = null;
         currentAutoStake = null;
@@ -1911,6 +1845,16 @@
             probData.over_pct.toFixed(1) + "%";
           document.getElementById("probLabel").innerText =
             `Sopra ${pointLine} punti`;
+
+          // Popola recap nella card mockup
+          if (document.getElementById("mockupTitle"))
+            document.getElementById("mockupTitle").innerText = `Analisi — ${currentPlayerName || "Giocatore"}`;
+          if (document.getElementById("recapPlayer"))
+            document.getElementById("recapPlayer").innerText = currentPlayerName || "—";
+          if (document.getElementById("recapThreshold"))
+            document.getElementById("recapThreshold").innerText = `${pointLine} punti`;
+          if (document.getElementById("recapOdds"))
+            document.getElementById("recapOdds").innerText = odds;
 
           const confMap = {
             high: {
@@ -2004,44 +1948,67 @@
             );
           }
 
+          const overPct = probData.over_pct;
+          const barEl = document.getElementById("resultBar");
+          if (barEl) {
+            const pct = Math.min(overPct, 100);
+            const hue = Math.round(pct * 1.2); // 0=red, 60=yellow, 72+=green
+            barEl.style.width = pct + "%";
+            barEl.style.background = `hsl(${hue}, 80%, 50%)`;
+            barEl.style.transition = "width 0.8s ease, background 0.8s ease";
+          }
+
           if (betData.recommended) {
             currentAutoStake = betData.stake;
             currentRecommended = true;
-
-            decision.className = "bet-recommended";
-            document.getElementById("decisionTitle").innerText =
-              "✅ BET CONSIGLIATA";
-            document.getElementById("decisionReason").innerText =
-              betData.reason;
-
-            document.getElementById("autoStake").innerText =
-              betData.stake.toFixed(2) + "€";
-            document.getElementById("stakeInfo").innerText =
-              `${betData.stake_percentage}% del bankroll corrente (${bankroll.toFixed(2)}€) | ${eventsRemaining} eventi rimanenti`;
 
             const potentialWin = betData.stake * (odds - 1);
             const roi = (potentialWin / betData.stake) * 100;
             const stakePerc = (betData.stake / bankroll) * 100;
 
-            document.getElementById("potentialWin").innerText =
-              "+" + potentialWin.toFixed(2) + "€";
-            document.getElementById("potentialROI").innerText =
-              roi.toFixed(1) + "%";
-            document.getElementById("stakePercentage").innerText =
-              stakePerc.toFixed(1) + "%";
+            // Badge verdict
+            const titleEl = document.getElementById("decisionTitle");
+            if (titleEl) {
+              titleEl.innerText = "✅ Valore Positivo";
+              titleEl.style.background = "rgba(16,185,129,0.15)";
+              titleEl.style.color = "#10b981";
+              titleEl.style.border = "1px solid rgba(16,185,129,0.3)";
+            }
+            document.getElementById("decisionReason").innerText = betData.reason;
 
-            stakeDisplay.style.display = "block";
+            // Stake
+            document.getElementById("autoStake").innerText = betData.stake.toFixed(2) + "€";
+            document.getElementById("stakeInfo").innerText =
+              `${betData.stake_percentage}% bankroll (${bankroll.toFixed(2)}€) · ${eventsRemaining} eventi rimasti`;
+
+            // Mini stats
+            document.getElementById("potentialWin").innerText = "+" + potentialWin.toFixed(2) + "€";
+            document.getElementById("potentialROI").innerText = roi.toFixed(1) + "%";
+            document.getElementById("stakePercentage").innerText = stakePerc.toFixed(1) + "%";
+
+            stakeDisplay.style.display = "flex";
+            stakeDisplay.style.flexDirection = "column";
+            stakeDisplay.style.alignItems = "center";
+
+            const miniStats = document.getElementById("miniStats");
+            if (miniStats) miniStats.style.display = "block";
+
             confirmBtn.style.display = "block";
           } else {
             currentRecommended = false;
 
-            decision.className = "bet-not-recommended";
-            document.getElementById("decisionTitle").innerText =
-              "❌ BET SCONSIGLIATA";
-            document.getElementById("decisionReason").innerText =
-              betData.reason;
+            const titleEl = document.getElementById("decisionTitle");
+            if (titleEl) {
+              titleEl.innerText = "❌ Nessun Valore";
+              titleEl.style.background = "rgba(239,68,68,0.12)";
+              titleEl.style.color = "#f87171";
+              titleEl.style.border = "1px solid rgba(239,68,68,0.3)";
+            }
+            document.getElementById("decisionReason").innerText = betData.reason;
 
             stakeDisplay.style.display = "none";
+            const miniStats = document.getElementById("miniStats");
+            if (miniStats) miniStats.style.display = "none";
             confirmBtn.style.display = "none";
           }
 
