@@ -2311,3 +2311,220 @@ details[open] summary {
   line-height: 1.4 !important;
   margin-bottom: 28px !important;
 }
+
+/* ── Hero CTA card (fusion hero + final CTA) ─────────── */
+.ld-hero-cta-card {
+  position: relative;
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #0f172a 100%);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 24px;
+  overflow: hidden;
+  padding: 40px 36px;
+  height: 100%;
+  box-sizing: border-box;
+}
+.ld-hero-cta-glow {
+  position: absolute;
+  top: 40%;
+  left: 30%;
+  transform: translate(-50%, -50%);
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(
+    circle,
+    rgba(99, 102, 241, 0.2) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+.ld-hero-cta-inner {
+  position: relative;
+  z-index: 1;
+}
+.ld-hero-cta-inner .ld-eyebrow {
+  color: rgba(255, 255, 255, 0.5);
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+}
+.ld-hero-cta-inner .ld-live-dot {
+  background: #10b981;
+}
+
+@media (max-width: 900px) {
+  .ld-hero-cta-card {
+    padding: 32px 24px;
+  }
+}
+
+/* ── Profile Dropdown ────────────────────────────────── */
+.user-profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 10px;
+  transition: background 0.15s;
+  user-select: none;
+}
+.user-profile-trigger:hover {
+  background: var(--bg-secondary);
+}
+.profile-chevron {
+  color: var(--text-muted);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 280px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+  z-index: 1000;
+  overflow: hidden;
+}
+.profile-dropdown.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+.pd-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--border-color);
+}
+.pd-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+.pd-info {
+  flex: 1;
+  min-width: 0;
+}
+.pd-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pd-email {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.pd-plan-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+.pd-plan-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pd-plan-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.pd-upgrade-btn {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3b82f6;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.pd-upgrade-btn:hover {
+  text-decoration: underline;
+}
+
+.pd-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 0;
+}
+
+.pd-actions {
+  padding: 6px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pd-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 9px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+.pd-action-btn:hover {
+  background: var(--bg-secondary);
+}
+.pd-action-danger {
+  color: #f87171;
+}
+.pd-action-danger:hover {
+  background: rgba(239, 68, 68, 0.08);
+}
+.pd-action-logout {
+  color: var(--text-secondary);
+}
+
+.pd-stripe-btn {
+  width: 100%;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #3b82f6;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+.pd-stripe-btn:hover {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+@media (max-width: 500px) {
+  .profile-dropdown {
+    width: calc(100vw - 24px);
+    right: -8px;
+  }
+  #userName {
+    display: none;
+  }
+}

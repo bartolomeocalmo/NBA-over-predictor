@@ -53,25 +53,60 @@
           <button onclick="handleLogin()" class="btn">Login con Google</button>
         </div>
 
-        <div id="loggedInSection" style="display: none">
-          <img id="userAvatar" class="user-avatar" />
-          <span id="userName" style="font-weight: 600"></span>
-          <span
-            id="planBadge"
-            class="plan-badge free"
-            onclick="
-              if (userPlan === 'free') window.location = '/premium.html';
-            "
-            style="cursor: pointer"
-            title="Passa a Premium"
-            >Free</span
-          >
-          <button onclick="showDashboard()" class="btn btn-secondary">
-            Dashboard
-          </button>
-          <button onclick="handleLogout()" class="btn btn-secondary">
-            Logout
-          </button>
+        <div id="loggedInSection" style="display: none; position: relative;">
+          <!-- Trigger profilo -->
+          <div class="user-profile-trigger" onclick="toggleProfileDropdown()" id="profileTrigger">
+            <img id="userAvatar" class="user-avatar" />
+            <span id="userName" style="font-weight: 600"></span>
+            <span id="planBadge" class="plan-badge free">Free</span>
+            <svg class="profile-chevron" id="profileChevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+
+          <!-- Dropdown profilo -->
+          <div class="profile-dropdown" id="profileDropdown">
+            <!-- Header card -->
+            <div class="pd-header">
+              <img id="userAvatarLarge" class="pd-avatar" />
+              <div class="pd-info">
+                <div class="pd-name" id="pdName">—</div>
+                <div class="pd-email" id="pdEmail">—</div>
+              </div>
+            </div>
+
+            <!-- Piano attivo -->
+            <div class="pd-plan-row" id="pdPlanRow">
+              <div class="pd-plan-info">
+                <span id="pdPlanBadge" class="plan-badge free">Free</span>
+                <span id="pdPlanLabel" class="pd-plan-label">Piano attuale</span>
+              </div>
+              <a href="/premium.html" id="pdUpgradeLink" class="pd-upgrade-btn">Passa a Premium →</a>
+            </div>
+
+            <div class="pd-divider"></div>
+
+            <!-- Azioni -->
+            <div class="pd-actions">
+              <button onclick="showDashboard(); toggleProfileDropdown();" class="pd-action-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                Dashboard
+              </button>
+              <button onclick="handleCancelSubscription()" id="pdCancelSubBtn" class="pd-action-btn pd-action-danger" style="display:none;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                Disdici abbonamento
+              </button>
+              <button onclick="handleLogout(); toggleProfileDropdown();" class="pd-action-btn pd-action-logout">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Esci
+              </button>
+            </div>
+
+            <!-- Stripe manage (visibile solo utenti stripe premium) -->
+            <div id="pdStripeRow" style="display:none; padding: 0 16px 12px;">
+              <button onclick="manageStripeSubscription()" class="pd-stripe-btn">
+                💳 Gestisci abbonamento Stripe →
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -363,13 +398,7 @@
 
       <div class="projects-grid" id="projectsGrid"></div>
 
-      <!-- Gestione abbonamento PayPal — visibile solo a utenti premium PayPal -->
-      <div id="subscriptionManagement" style="display:none; margin-top:28px; padding:20px 24px; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:var(--radius-lg);">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-          <div>
-            <div style="font-weight:700; font-size:15px; color:var(--text-primary);">⭐ Piano Premium attivo</div>
-            <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">Abbonamento mensile PayPal — €4,90/mese</div>
-          </div>
+
           <button onclick="cancelPayPalSubscription()" id="btnCancelSub" style="
             background:none; border:1px solid rgba(239,68,68,0.4); color:#f87171;
             border-radius:8px; padding:8px 16px; font-size:13px; cursor:pointer;
@@ -813,13 +842,26 @@
 
       function updatePlanBadge() {
         const badge = document.getElementById("planBadge");
-        if (!badge) return;
-        if (userPlan === "premium") {
-          badge.className = "plan-badge premium";
-          badge.innerHTML = "⭐ Premium";
-        } else {
-          badge.className = "plan-badge free";
-          badge.innerHTML = "Free";
+        if (badge) {
+          badge.className = "plan-badge " + userPlan;
+          badge.innerHTML = userPlan === "premium" ? "⭐ Premium" : "Free";
+        }
+        // Sincronizza dropdown profilo
+        const pdBadge   = document.getElementById("pdPlanBadge");
+        const pdUpgrade = document.getElementById("pdUpgradeLink");
+        const pdLabel   = document.getElementById("pdPlanLabel");
+        if (pdBadge)   { pdBadge.className = "plan-badge " + userPlan; pdBadge.innerHTML = userPlan === "premium" ? "⭐ Premium" : "Free"; }
+        if (pdUpgrade) pdUpgrade.style.display = userPlan === "premium" ? "none" : "inline-block";
+        if (pdLabel)   pdLabel.innerText = userPlan === "premium" ? "Abbonamento attivo" : "Piano attuale";
+        // Mostra pulsante disdetta PayPal o Stripe a seconda del provider
+        if (userPlan === "premium" && currentUser) {
+          db.collection("users").doc(currentUser.uid).get().then(snap => {
+            const subId = snap.data()?.paypal_subscription_id;
+            const cancelBtn = document.getElementById("pdCancelSubBtn");
+            const stripeRow = document.getElementById("pdStripeRow");
+            if (cancelBtn) cancelBtn.style.display = subId ? "flex" : "none";
+            if (stripeRow) stripeRow.style.display  = (!subId) ? "block" : "none";
+          }).catch(() => {});
         }
       }
 
@@ -1085,7 +1127,14 @@
         document.getElementById("loggedInSection").style.display = "flex";
         document.getElementById("loggedInSection").style.gap = "12px";
         document.getElementById("loggedInSection").style.alignItems = "center";
-        document.getElementById("userName").innerText = user.displayName;
+        document.getElementById("userName").innerText = user.displayName || user.email?.split("@")[0] || "Utente";
+        // Popola dropdown profilo
+        const pdName = document.getElementById("pdName");
+        const pdEmail = document.getElementById("pdEmail");
+        const userAvatarLarge = document.getElementById("userAvatarLarge");
+        if (pdName) pdName.innerText = user.displayName || "Utente";
+        if (pdEmail) pdEmail.innerText = user.email || "";
+        if (userAvatarLarge && user.photoURL) userAvatarLarge.src = user.photoURL;
         document.getElementById("userAvatar").src = user.photoURL;
         document.getElementById("landingView").classList.remove("active");
         loadUserPlan(); // carica piano e aggiorna UI
@@ -2422,6 +2471,82 @@
           }
           deferredInstallPrompt = null;
         });
+      }
+
+      // ── DROPDOWN PROFILO ──────────────────────────────────────────────
+      function toggleProfileDropdown() {
+        const dd = document.getElementById("profileDropdown");
+        const chevron = document.getElementById("profileChevron");
+        if (!dd) return;
+        const isOpen = dd.classList.contains("active");
+        dd.classList.toggle("active");
+        if (chevron) chevron.style.transform = isOpen ? "rotate(0deg)" : "rotate(180deg)";
+      }
+
+      // Chiudi cliccando fuori
+      document.addEventListener("click", (e) => {
+        const trigger = document.getElementById("profileTrigger");
+        const dd = document.getElementById("profileDropdown");
+        if (dd && trigger && !trigger.contains(e.target) && !dd.contains(e.target)) {
+          dd.classList.remove("active");
+          const chevron = document.getElementById("profileChevron");
+          if (chevron) chevron.style.transform = "rotate(0deg)";
+        }
+      });
+
+      async function handleCancelSubscription() {
+        if (!currentUser) return;
+        if (!confirm("Sei sicuro di voler disdire il piano Premium?\nIl tuo account tornerà al piano Free.")) return;
+        const btn = document.getElementById("pdCancelSubBtn");
+        btn.disabled = true;
+        btn.innerText = "⏳ Cancellazione...";
+        try {
+          const snap = await db.collection("users").doc(currentUser.uid).get();
+          const subId = snap.data()?.paypal_subscription_id;
+          if (!subId) { alert("Nessun abbonamento PayPal trovato."); btn.disabled = false; return; }
+          const res = await fetch("/paypal/cancel-subscription", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ uid: currentUser.uid, subscription_id: subId }),
+          });
+          const data = await res.json();
+          if (data.success) {
+            alert("✅ Abbonamento cancellato. Il piano è tornato a Free.");
+            userPlan = "free";
+            btn.style.display = "none";
+            document.getElementById("pdPlanBadge").innerText = "Free";
+            document.getElementById("pdPlanBadge").className = "plan-badge free";
+            document.getElementById("pdUpgradeLink").style.display = "inline-block";
+            document.getElementById("planBadge").innerText = "Free";
+            document.getElementById("planBadge").className = "plan-badge free";
+            document.getElementById("subscriptionManagement")?.style && (document.getElementById("subscriptionManagement").style.display = "none");
+          } else {
+            alert("Errore: " + (data.error || "Riprova."));
+            btn.disabled = false;
+            btn.innerText = "Disdici abbonamento";
+          }
+        } catch(e) {
+          alert("Errore di rete: " + e.message);
+          btn.disabled = false;
+          btn.innerText = "Disdici abbonamento";
+        }
+      }
+
+      async function manageStripeSubscription() {
+        if (!currentUser) return;
+        const btn = document.getElementById("pdStripeRow");
+        try {
+          const res = await fetch("/stripe/customer-portal", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ uid: currentUser.uid }),
+          });
+          const data = await res.json();
+          if (data.url) window.location.href = data.url;
+          else alert("Errore: " + (data.error || "Riprova."));
+        } catch(e) {
+          alert("Errore di rete: " + e.message);
+        }
       }
 
       // ============================================
