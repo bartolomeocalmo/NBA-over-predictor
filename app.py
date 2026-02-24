@@ -30,11 +30,17 @@ CORS(app)
 # Registra blueprint pagamenti
 if PAYMENTS_ENABLED:
     app.register_blueprint(payments_bp)
-    print("[payments] ✅ Routes attive: /stripe/create-checkout, /paypal/create-order, /paypal/capture-order")
+    print("[payments] ✅ Routes attive: /stripe/create-checkout, /paypal/create-subscription, /paypal/verify-subscription, /paypal/cancel-subscription")
 else:
     # Fallback routes che restituiscono JSON invece di 404 HTML
-    @app.route("/paypal/create-order", methods=["POST"])
-    def paypal_fallback():
+    @app.route("/paypal/create-subscription", methods=["POST"])
+    def paypal_sub_fallback():
+        return jsonify({"error": "Modulo payments non caricato — controlla i log Railway"}), 503
+    @app.route("/paypal/verify-subscription", methods=["POST"])
+    def paypal_verify_fallback():
+        return jsonify({"error": "Modulo payments non caricato — controlla i log Railway"}), 503
+    @app.route("/paypal/cancel-subscription", methods=["POST"])
+    def paypal_cancel_fallback():
         return jsonify({"error": "Modulo payments non caricato — controlla i log Railway"}), 503
     @app.route("/stripe/create-checkout", methods=["POST"])
     def stripe_fallback():
@@ -636,4 +642,4 @@ if __name__ == "__main__":
     print("=" * 70)
     print("\n")
 
-    app.run(debug=True)
+    
