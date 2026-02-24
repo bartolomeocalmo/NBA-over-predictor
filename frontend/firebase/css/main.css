@@ -2128,3 +2128,165 @@ details[open] summary {
     font-size: 21px;
   }
 }
+
+/* ── Testimonianze minimaliste ───────────────────────── */
+.ld-testi-minimal {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 900px;
+  margin: 0 auto 14px;
+}
+.ld-testi-quote {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 28px 24px 22px;
+  position: relative;
+  transition:
+    transform 0.2s,
+    border-color 0.2s;
+}
+.ld-testi-quote:hover {
+  transform: translateY(-3px);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+.ld-tq-featured {
+  border-color: rgba(59, 130, 246, 0.35);
+  background: rgba(59, 130, 246, 0.05);
+}
+.ld-tq-mark {
+  font-size: 52px;
+  line-height: 1;
+  color: #3b82f6;
+  opacity: 0.35;
+  font-family: Georgia, serif;
+  margin-bottom: -10px;
+  margin-left: -4px;
+}
+.ld-testi-quote p {
+  font-size: 15px;
+  color: var(--text-primary);
+  line-height: 1.65;
+  margin: 0 0 18px;
+  font-style: italic;
+}
+.ld-tq-author {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* ── Final CTA ridisegnata ───────────────────────────── */
+.ld-final-cta {
+  position: relative;
+  text-align: center;
+  padding: 72px 32px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 28px;
+  max-width: 780px;
+  margin: 0 auto 40px;
+  overflow: hidden;
+}
+.ld-final-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(
+    circle,
+    rgba(99, 102, 241, 0.18) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+.ld-final-inner {
+  position: relative;
+  z-index: 1;
+}
+.ld-final-badge {
+  display: inline-block;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #10b981;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 16px;
+  border-radius: 999px;
+  margin-bottom: 24px;
+  letter-spacing: 0.3px;
+}
+.ld-final-title {
+  font-size: 38px;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 16px;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+.ld-final-sub {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 36px;
+  line-height: 1.6;
+}
+.ld-final-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.ld-btn-glow {
+  box-shadow:
+    0 0 28px rgba(59, 130, 246, 0.45),
+    0 4px 16px rgba(0, 0, 0, 0.3);
+  font-size: 16px;
+  padding: 14px 32px;
+}
+.ld-btn-glow:hover {
+  box-shadow:
+    0 0 40px rgba(59, 130, 246, 0.65),
+    0 4px 20px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+.ld-final-secondary-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 4px 8px;
+}
+.ld-final-secondary-btn:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+.ld-final-features {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 20px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+@media (max-width: 700px) {
+  .ld-testi-minimal {
+    grid-template-columns: 1fr;
+  }
+  .ld-final-title {
+    font-size: 27px;
+  }
+  .ld-final-cta {
+    padding: 48px 24px;
+  }
+}
+@media (max-width: 900px) and (min-width: 701px) {
+  .ld-testi-minimal {
+    grid-template-columns: 1fr 1fr;
+  }
+}
