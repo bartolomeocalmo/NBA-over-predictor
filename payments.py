@@ -124,6 +124,49 @@ def stripe_webhook():
     return jsonify({"received": True}), 200
 
 
+@payments_bp.route("/stripe/customer-portal", methods=["POST"])
+def stripe_customer_portal():
+    if not STRIPE_ENABLED:
+        return jsonify({"error": "Stripe non configurato"}), 500
+
+    data  = request.get_json()
+    uid   = data.get("uid")
+    if not uid:
+        return jsonify({"error": "uid mancante"}), 400
+
+    try:
+        # Recupera il customer_id Stripe da Firestore
+        db = get_admin_db()
+        snap = db.collection("users").document(uid).get()
+        user_data = snap.to_dict() or {}
+        customer_id = user_data.get("stripe_customer_id")
+
+        # Se non abbiamo il customer_id salvato, cercalo su Stripe per email
+        if not customer_id:
+            email = user_data.get("email", "")
+            if email:
+                customers = stripe.Customer.list(email=email, limit=1)
+                if customers.data:
+                    customer_id = customers.data[0].id
+                    # Salviamolo per le prossime volte
+                    db.collection("users").document(uid).set(
+                        {"stripe_customer_id": customer_id}, merge=True
+                    )
+
+        if not customer_id:
+            return jsonify({"error": "Nessun abbonamento Stripe trovato per questo account."}), 404
+
+        session = stripe.billing_portal.Session.create(
+            customer=customer_id,
+            return_url=f"{APP_URL}/?profile=open",
+        )
+        return jsonify({"url": session.url})
+
+    except Exception as e:
+        print(f"[Stripe portal] Errore: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 # ============================================================
 # PAYPAL SUBSCRIPTIONS
 # Variabili Railway: PAYPAL_CLIENT_ID, PAYPAL_SECRET,
