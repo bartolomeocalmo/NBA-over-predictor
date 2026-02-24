@@ -352,15 +352,6 @@
       <div class="projects-grid" id="projectsGrid"></div>
 
 
-          <button onclick="cancelPayPalSubscription()" id="btnCancelSub" style="
-            background:none; border:1px solid rgba(239,68,68,0.4); color:#f87171;
-            border-radius:8px; padding:8px 16px; font-size:13px; cursor:pointer;
-            transition: background 0.2s;
-          " onmouseover="this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.background='none'">
-            Disdici abbonamento
-          </button>
-        </div>
-      </div>
     </div>
 
     <!-- PREDICTOR VIEW -->
@@ -759,6 +750,149 @@
     <!-- /predictorView -->
     </div>
 
+
+    <!-- ══ PROFILE PAGE OVERLAY ══════════════════════════════════════ -->
+    <div id="profilePageOverlay" class="profile-overlay">
+      <div class="profile-overlay-inner">
+        <div class="pov-header">
+          <div class="pov-title">Il mio account</div>
+          <button class="pov-close" onclick="closeProfilePage()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="pov-body">
+          <div class="pov-section pov-identity">
+            <img id="povAvatar" class="pov-avatar" src="" alt="avatar" />
+            <div class="pov-user-info">
+              <div class="pov-display-name" id="povName">—</div>
+              <div class="pov-email" id="povEmail">—</div>
+            </div>
+          </div>
+          <div class="pov-section">
+            <div class="pov-section-label">Piano</div>
+            <div class="pov-plan-card">
+              <div class="pov-plan-left">
+                <span class="plan-badge free" id="povPlanBadge">Free</span>
+                <div>
+                  <div class="pov-plan-name" id="povPlanName">Piano Free</div>
+                  <div class="pov-plan-desc" id="povPlanDesc">5 ricerche/giorno · 2 progetti/mese</div>
+                </div>
+              </div>
+              <a href="/premium.html" id="povUpgradeBtn" class="pov-upgrade-btn">Passa a Premium →</a>
+            </div>
+          </div>
+          <div class="pov-section">
+            <div class="pov-section-label">Utilizzo oggi</div>
+            <div class="pov-usage-grid">
+              <div class="pov-usage-item">
+                <div class="pov-usage-num" id="povSearchUsed">—</div>
+                <div class="pov-usage-lbl">Ricerche usate</div>
+              </div>
+              <div class="pov-usage-item">
+                <div class="pov-usage-num" id="povSearchLeft">—</div>
+                <div class="pov-usage-lbl">Rimaste oggi</div>
+              </div>
+              <div class="pov-usage-item">
+                <div class="pov-usage-num" id="povProjectsUsed">—</div>
+                <div class="pov-usage-lbl">Progetti mese</div>
+              </div>
+            </div>
+          </div>
+          <div class="pov-section" id="povSubSection" style="display:none;">
+            <div class="pov-section-label">Abbonamento</div>
+            <div id="povPaypalSub" style="display:none;">
+              <div class="pov-sub-row">
+                <div>
+                  <div class="pov-sub-name">PayPal · €4,90/mese</div>
+                  <div class="pov-sub-status">🟢 Attivo — rinnovo automatico mensile</div>
+                </div>
+                <button onclick="handleCancelSubscription()" id="povCancelBtn" class="pov-cancel-btn">Disdici</button>
+              </div>
+            </div>
+            <div id="povStripeSub" style="display:none;">
+              <div class="pov-sub-row">
+                <div>
+                  <div class="pov-sub-name">Carta di credito · €4,90/mese</div>
+                  <div class="pov-sub-status">🟢 Attivo — rinnovo automatico mensile</div>
+                </div>
+                <button onclick="manageStripeSubscription()" class="pov-manage-btn">Gestisci</button>
+              </div>
+            </div>
+          </div>
+          <div class="pov-section">
+            <div class="pov-section-label">Account</div>
+            <div class="pov-actions-list">
+              <button class="pov-action-row" onclick="handleLogout(); closeProfilePage();">
+                <div class="pov-action-icon pov-icon-logout">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </div>
+                <span>Esci dall'account</span>
+                <svg class="pov-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="pov-footer">
+            <a href="/terms.html">Termini</a>
+            <span>·</span>
+            <a href="/privacy.html">Privacy</a>
+            <span>·</span>
+            <a href="/cookie.html">Cookie</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL nuovo progetto -->
+    <div class="modal-overlay" id="newProjectModal">
+      <div class="modal" style="max-width:480px">
+        <h2 style="margin-bottom:20px">📁 Nuovo Progetto</h2>
+        <div style="margin-bottom:16px">
+          <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px">Nome progetto</label>
+          <input type="text" id="projectName" class="form-input" placeholder="Es. Gennaio 2026" />
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div>
+            <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px">Bankroll iniziale (€)</label>
+            <input type="number" id="projectBankroll" class="form-input" placeholder="100" min="1" step="1" />
+          </div>
+          <div>
+            <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px">N° eventi totali</label>
+            <input type="number" id="projectEvents" class="form-input" placeholder="10" min="1" step="1" />
+          </div>
+        </div>
+        <div style="margin-bottom:24px">
+          <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px">Target profitto (€)</label>
+          <input type="number" id="projectTarget" class="form-input" placeholder="30" min="1" step="1" />
+        </div>
+        <div style="display:flex;gap:12px">
+          <button onclick="createProject()" class="btn-primary-full" style="flex:1">✅ Crea Progetto</button>
+          <button onclick="document.getElementById('newProjectModal').classList.remove('active')" class="btn btn-secondary">Annulla</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BANNER INSTALLAZIONE PWA -->
+    <div id="pwaInstallBanner" style="display:none; position:fixed; bottom:0; left:0; right:0; background:linear-gradient(135deg,#1e3a5f,#1a1a2e); border-top:1px solid rgba(59,130,246,0.4); padding:16px 20px; z-index:9999; box-shadow:0 -4px 24px rgba(0,0,0,0.4);">
+      <div id="pwaAndroidPrompt" style="display:none; align-items:center; gap:12px;">
+        <img src="/logo.png" style="width:40px;height:40px;border-radius:10px;flex-shrink:0;" alt="logo">
+        <div style="flex:1;"><div style="font-weight:700;font-size:15px;color:#fff;">Installa NBA Over Predictor</div><div style="font-size:12px;color:#93c5fd;margin-top:2px;">Accesso rapido dalla schermata home</div></div>
+        <button id="pwaInstallBtn" style="background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;">Installa</button>
+        <button onclick="dismissPwaBanner()" style="background:none;border:none;color:#93c5fd;font-size:20px;cursor:pointer;padding:4px;flex-shrink:0;line-height:1;">×</button>
+      </div>
+      <div id="pwaIosPrompt" style="display:none; flex-direction:column; gap:8px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <img src="/logo.png" style="width:40px;height:40px;border-radius:10px;flex-shrink:0;" alt="logo">
+          <div style="flex:1;"><div style="font-weight:700;font-size:15px;color:#fff;">Installa NBA Over Predictor</div><div style="font-size:12px;color:#93c5fd;margin-top:2px;">Aggiungi alla schermata Home</div></div>
+          <button onclick="dismissPwaBanner()" style="background:none;border:none;color:#93c5fd;font-size:20px;cursor:pointer;padding:4px;flex-shrink:0;line-height:1;">×</button>
+        </div>
+        <div style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:10px 14px;font-size:13px;color:#93c5fd;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:18px;">⬆️</span>
+          <span>Tocca <strong style="color:#fff;">Condividi</strong> poi <strong style="color:#fff;">"Aggiungi a schermata Home"</strong></span>
+        </div>
+      </div>
+    </div>
+
+
 <script>
       // STATE
       let currentUser = null;
@@ -1110,7 +1244,6 @@
           .forEach((v) => v.classList.remove("active"));
         document.getElementById("dashboardView").classList.add("active");
         loadUserProjects();
-        checkSubscriptionManagement();
       }
 
       function showPredictor() {
@@ -1355,62 +1488,6 @@
       }
 
       // GESTIONE ABBONAMENTO
-      async function cancelPayPalSubscription() {
-        if (!currentUser) return;
-        if (!confirm("Sei sicuro di voler disdire il piano Premium? Il tuo account tornerà al piano Free.")) return;
-
-        const btn = document.getElementById("btnCancelSub");
-        btn.disabled = true;
-        btn.innerText = "⏳ Cancellazione...";
-
-        try {
-          // Recupera subscription_id da Firestore
-          const snap = await db.collection("users").doc(currentUser.uid).get();
-          const subId = snap.data()?.paypal_subscription_id;
-
-          if (!subId) {
-            alert("Nessun abbonamento PayPal attivo trovato.");
-            btn.disabled = false;
-            btn.innerText = "Disdici abbonamento";
-            return;
-          }
-
-          const res = await fetch("/paypal/cancel-subscription", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ uid: currentUser.uid, subscription_id: subId }),
-          });
-          const data = await res.json();
-
-          if (data.success) {
-            alert("✅ Abbonamento cancellato. Il tuo piano è tornato a Free.");
-            userPlan = "free";
-            document.getElementById("subscriptionManagement").style.display = "none";
-            updateSearchLimitUI().catch(() => {});
-          } else {
-            alert("Errore: " + (data.error || "Riprova più tardi."));
-            btn.disabled = false;
-            btn.innerText = "Disdici abbonamento";
-          }
-        } catch (e) {
-          alert("Errore di rete: " + e.message);
-          btn.disabled = false;
-          btn.innerText = "Disdici abbonamento";
-        }
-      }
-
-      // Mostra sezione gestione abbonamento se utente premium + ha sub PayPal
-      async function checkSubscriptionManagement() {
-        if (!currentUser || userPlan !== "premium") return;
-        try {
-          const snap = await db.collection("users").doc(currentUser.uid).get();
-          const subId = snap.data()?.paypal_subscription_id;
-          if (subId) {
-            document.getElementById("subscriptionManagement").style.display = "block";
-          }
-        } catch (e) {}
-      }
-
       // PROJECTS
       async function loadUserProjects() {
         if (!currentUser) return;
@@ -2550,5 +2627,6 @@
         });
       }
     </script>
+
   </body>
 </html>
