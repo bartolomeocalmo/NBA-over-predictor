@@ -53,61 +53,14 @@
           <button onclick="handleLogin()" class="btn">Login con Google</button>
         </div>
 
-        <div id="loggedInSection" style="display: none; position: relative;">
-          <!-- Trigger profilo -->
-          <div class="user-profile-trigger" onclick="toggleProfileDropdown()" id="profileTrigger">
+        <div id="loggedInSection" style="display: none">
+          <div class="user-profile-trigger" onclick="openProfilePage()">
             <img id="userAvatar" class="user-avatar" />
             <span id="userName" style="font-weight: 600"></span>
             <span id="planBadge" class="plan-badge free">Free</span>
-            <svg class="profile-chevron" id="profileChevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-
-          <!-- Dropdown profilo -->
-          <div class="profile-dropdown" id="profileDropdown">
-            <!-- Header card -->
-            <div class="pd-header">
-              <img id="userAvatarLarge" class="pd-avatar" />
-              <div class="pd-info">
-                <div class="pd-name" id="pdName">—</div>
-                <div class="pd-email" id="pdEmail">—</div>
-              </div>
-            </div>
-
-            <!-- Piano attivo -->
-            <div class="pd-plan-row" id="pdPlanRow">
-              <div class="pd-plan-info">
-                <span id="pdPlanBadge" class="plan-badge free">Free</span>
-                <span id="pdPlanLabel" class="pd-plan-label">Piano attuale</span>
-              </div>
-              <a href="/premium.html" id="pdUpgradeLink" class="pd-upgrade-btn">Passa a Premium →</a>
-            </div>
-
-            <div class="pd-divider"></div>
-
-            <!-- Azioni -->
-            <div class="pd-actions">
-              <button onclick="showDashboard(); toggleProfileDropdown();" class="pd-action-btn">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-                Dashboard
-              </button>
-              <button onclick="handleCancelSubscription()" id="pdCancelSubBtn" class="pd-action-btn pd-action-danger" style="display:none;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                Disdici abbonamento
-              </button>
-              <button onclick="handleLogout(); toggleProfileDropdown();" class="pd-action-btn pd-action-logout">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                Esci
-              </button>
-            </div>
-
-            <!-- Stripe manage (visibile solo utenti stripe premium) -->
-            <div id="pdStripeRow" style="display:none; padding: 0 16px 12px;">
-              <button onclick="manageStripeSubscription()" class="pd-stripe-btn">
-                💳 Gestisci abbonamento Stripe →
-              </button>
-            </div>
-          </div>
-        </div>
+          <button onclick="showDashboard()" class="btn btn-secondary">Dashboard</button>
+        </div>        </div>
       </div>
     </div>
 
@@ -2473,248 +2426,109 @@
         });
       }
 
-      // ── DROPDOWN PROFILO ──────────────────────────────────────────────
-      function toggleProfileDropdown() {
-        const dd = document.getElementById("profileDropdown");
-        const chevron = document.getElementById("profileChevron");
-        if (!dd) return;
-        const isOpen = dd.classList.contains("active");
-        dd.classList.toggle("active");
-        if (chevron) chevron.style.transform = isOpen ? "rotate(0deg)" : "rotate(180deg)";
+      async function openProfilePage() {
+        document.getElementById("profilePageOverlay").classList.add("active");
+        document.body.style.overflow = "hidden";
+        if (!currentUser) return;
+
+        // Identità
+        const name  = currentUser.displayName || currentUser.email?.split("@")[0] || "Utente";
+        const email = currentUser.email || "";
+        document.getElementById("povName").innerText  = name;
+        document.getElementById("povEmail").innerText = email;
+        const av = document.getElementById("povAvatar");
+        if (av && currentUser.photoURL) av.src = currentUser.photoURL;
+
+        // Piano
+        const isPremium = userPlan === "premium";
+        const povBadge = document.getElementById("povPlanBadge");
+        if (povBadge) { povBadge.innerText = isPremium ? "⭐ Premium" : "Free"; povBadge.className = "plan-badge " + userPlan; }
+        const povPlanName = document.getElementById("povPlanName");
+        if (povPlanName) povPlanName.innerText = isPremium ? "Piano Premium" : "Piano Free";
+        const povPlanDesc = document.getElementById("povPlanDesc");
+        if (povPlanDesc) povPlanDesc.innerText = isPremium ? "Ricerche e progetti illimitati" : "5 ricerche/giorno · 2 progetti/mese";
+        const upgradeBtn = document.getElementById("povUpgradeBtn");
+        if (upgradeBtn) upgradeBtn.style.display = isPremium ? "none" : "inline-block";
+
+        // Utilizzo
+        try {
+          const snap = await db.collection("users").doc(currentUser.uid).get();
+          const data = snap.data() || {};
+          const todayKey = new Date().toISOString().split("T")[0];
+          const usageSnap = await db.collection("users").doc(currentUser.uid).collection("usage").doc(todayKey).get();
+          const usageData = usageSnap.exists ? usageSnap.data() : {};
+          const used = usageData.searches || 0;
+          const limit = isPremium ? "∞" : FREE_SEARCHES_PER_DAY;
+          const left = isPremium ? "∞" : Math.max(0, FREE_SEARCHES_PER_DAY - used);
+          document.getElementById("povSearchUsed").innerText  = used;
+          document.getElementById("povSearchLeft").innerText  = left;
+
+          // Progetti mese corrente
+          const projSnap = await db.collection("users").doc(currentUser.uid).collection("usage").doc(monthKey()).get();
+          const projData  = projSnap.exists ? projSnap.data() : {};
+          const projUsed  = projData.projects || 0;
+          document.getElementById("povProjectsUsed").innerText = isPremium ? projUsed + " (illimitati)" : projUsed + " / 2";
+
+          // Abbonamento
+          const subSection = document.getElementById("povSubSection");
+          const subId = data.paypal_subscription_id;
+          if (isPremium) {
+            subSection.style.display = "block";
+            if (subId) {
+              document.getElementById("povPaypalSub").style.display = "block";
+              document.getElementById("povStripeSub").style.display = "none";
+            } else {
+              document.getElementById("povPaypalSub").style.display = "none";
+              document.getElementById("povStripeSub").style.display = "block";
+            }
+          } else {
+            subSection.style.display = "none";
+          }
+        } catch(e) { console.warn("[openProfilePage]", e); }
       }
+      function closeProfilePage() { document.getElementById("profilePageOverlay").classList.remove("active"); document.body.style.overflow = ""; }
 
-      // Chiudi cliccando fuori
-      document.addEventListener("click", (e) => {
-        const trigger = document.getElementById("profileTrigger");
-        const dd = document.getElementById("profileDropdown");
-        if (dd && trigger && !trigger.contains(e.target) && !dd.contains(e.target)) {
-          dd.classList.remove("active");
-          const chevron = document.getElementById("profileChevron");
-          if (chevron) chevron.style.transform = "rotate(0deg)";
-        }
-      });
-
-      async function handleCancelSubscription() {
+            async function handleCancelSubscription() {
         if (!currentUser) return;
         if (!confirm("Sei sicuro di voler disdire il piano Premium?\nIl tuo account tornerà al piano Free.")) return;
-        const btn = document.getElementById("pdCancelSubBtn");
-        btn.disabled = true;
-        btn.innerText = "⏳ Cancellazione...";
+        const btn = document.getElementById("povCancelBtn");
+        if (btn) { btn.disabled = true; btn.innerText = "⏳..."; }
         try {
           const snap = await db.collection("users").doc(currentUser.uid).get();
           const subId = snap.data()?.paypal_subscription_id;
-          if (!subId) { alert("Nessun abbonamento PayPal trovato."); btn.disabled = false; return; }
+          if (!subId) { alert("Nessun abbonamento PayPal trovato."); if (btn) { btn.disabled = false; btn.innerText = "Disdici"; } return; }
           const res = await fetch("/paypal/cancel-subscription", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+            method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ uid: currentUser.uid, subscription_id: subId }),
           });
           const data = await res.json();
           if (data.success) {
             alert("✅ Abbonamento cancellato. Il piano è tornato a Free.");
             userPlan = "free";
-            btn.style.display = "none";
-            document.getElementById("pdPlanBadge").innerText = "Free";
-            document.getElementById("pdPlanBadge").className = "plan-badge free";
-            document.getElementById("pdUpgradeLink").style.display = "inline-block";
-            document.getElementById("planBadge").innerText = "Free";
-            document.getElementById("planBadge").className = "plan-badge free";
-            document.getElementById("subscriptionManagement")?.style && (document.getElementById("subscriptionManagement").style.display = "none");
+            updatePlanBadge();
+            closeProfilePage();
+            setTimeout(openProfilePage, 300);
           } else {
             alert("Errore: " + (data.error || "Riprova."));
-            btn.disabled = false;
-            btn.innerText = "Disdici abbonamento";
+            if (btn) { btn.disabled = false; btn.innerText = "Disdici"; }
           }
         } catch(e) {
-          alert("Errore di rete: " + e.message);
-          btn.disabled = false;
-          btn.innerText = "Disdici abbonamento";
+          alert("Errore: " + e.message);
+          if (btn) { btn.disabled = false; btn.innerText = "Disdici"; }
         }
       }
 
       async function manageStripeSubscription() {
-        if (!currentUser) return;
-        const btn = document.getElementById("pdStripeRow");
         try {
           const res = await fetch("/stripe/customer-portal", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+            method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ uid: currentUser.uid }),
           });
           const data = await res.json();
           if (data.url) window.location.href = data.url;
           else alert("Errore: " + (data.error || "Riprova."));
-        } catch(e) {
-          alert("Errore di rete: " + e.message);
-        }
+        } catch(e) { alert("Errore: " + e.message); }
       }
 
       // ============================================
       // PWA — Registrazione Service Worker
-      // ============================================
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", async () => {
-          try {
-            // Rimuovi tutti i vecchi service worker prima di registrare il nuovo
-            const regs = await navigator.serviceWorker.getRegistrations();
-            for (const reg of regs) {
-              const swUrl = reg.active?.scriptURL || "";
-              // Forza re-registrazione se il cache name non è aggiornato
-              await reg.update();
-            }
-            const reg = await navigator.serviceWorker.register("/service-worker.js");
-            console.log("[PWA] Service Worker registrato ✅", reg.scope);
-          } catch (err) {
-            console.warn("[PWA] Registrazione SW fallita:", err);
-          }
-        });
-      }
-    </script>
-    <!-- FOOTER LEGALE -->
-    <footer
-      style="
-        display: block;
-        max-width: 1400px;
-        margin: 32px auto 0;
-        padding: 20px 24px;
-        text-align: center;
-        border-top: 1px solid var(--border-color);
-        font-size: 13px;
-        color: var(--text-muted);
-      "
-    >
-      <p>
-        © 2026 NBA Over Predictor &nbsp;·&nbsp;
-        <a
-          href="/terms.html"
-          style="color: var(--text-secondary); text-decoration: none"
-          onmouseover="this.style.color = 'var(--accent-primary)'"
-          onmouseout="this.style.color = 'var(--text-secondary)'"
-          >Termini di Servizio</a
-        >
-        &nbsp;·&nbsp;
-        <a
-          href="/privacy.html"
-          style="color: var(--text-secondary); text-decoration: none"
-          onmouseover="this.style.color = 'var(--accent-primary)'"
-          onmouseout="this.style.color = 'var(--text-secondary)'"
-          >Privacy Policy</a
-        >
-        &nbsp;·&nbsp;
-        <a
-          href="/cookie.html"
-          style="color: var(--text-secondary); text-decoration: none"
-          onmouseover="this.style.color = 'var(--accent-primary)'"
-          onmouseout="this.style.color = 'var(--text-secondary)'"
-          >Cookie Policy</a
-        >
-      </p>
-      <p style="margin-top: 8px; font-size: 12px">
-        Strumento di analisi statistica a scopo informativo. Non costituisce
-        consulenza finanziaria.
-      </p>
-    </footer>
-
-
-
-    <!-- BANNER INSTALLAZIONE PWA -->
-    <div id="pwaInstallBanner" style="
-      display: none;
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: linear-gradient(135deg, #1e3a5f, #1a1a2e);
-      border-top: 1px solid rgba(59,130,246,0.4);
-      padding: 16px 20px;
-      z-index: 9999;
-      box-shadow: 0 -4px 24px rgba(0,0,0,0.4);
-    ">
-      <!-- Android / Chrome -->
-      <div id="pwaAndroidPrompt" style="display:none; align-items:center; gap:12px;">
-        <img src="/logo.png" style="width:40px;height:40px;border-radius:10px;flex-shrink:0;" alt="logo">
-        <div style="flex:1;">
-          <div style="font-weight:700;font-size:15px;color:#fff;">Installa NBA Over Predictor</div>
-          <div style="font-size:12px;color:#93c5fd;margin-top:2px;">Accesso rapido dalla schermata home</div>
-        </div>
-        <button id="pwaInstallBtn" style="
-          background:#3b82f6;color:#fff;border:none;border-radius:8px;
-          padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;
-        ">Installa</button>
-        <button onclick="dismissPwaBanner()" style="
-          background:none;border:none;color:#93c5fd;font-size:20px;cursor:pointer;
-          padding:4px;flex-shrink:0;line-height:1;
-        ">×</button>
-      </div>
-      <!-- iOS / Safari -->
-      <div id="pwaIosPrompt" style="display:none; flex-direction:column; gap:8px;">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <img src="/logo.png" style="width:40px;height:40px;border-radius:10px;flex-shrink:0;" alt="logo">
-          <div style="flex:1;">
-            <div style="font-weight:700;font-size:15px;color:#fff;">Installa NBA Over Predictor</div>
-            <div style="font-size:12px;color:#93c5fd;margin-top:2px;">Aggiungi alla schermata Home per accesso rapido</div>
-          </div>
-          <button onclick="dismissPwaBanner()" style="
-            background:none;border:none;color:#93c5fd;font-size:20px;cursor:pointer;
-            padding:4px;flex-shrink:0;line-height:1;
-          ">×</button>
-        </div>
-        <div style="
-          background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);
-          border-radius:8px;padding:10px 14px;font-size:13px;color:#93c5fd;
-          display:flex;align-items:center;gap:8px;
-        ">
-          <span style="font-size:18px;">⬆️</span>
-          <span>Tocca <strong style="color:#fff;">Condividi</strong> poi <strong style="color:#fff;">"Aggiungi a schermata Home"</strong></span>
-        </div>
-      </div>
-    </div>
-
-    <!-- MODAL nuovo progetto -->
-    <!-- MODAL (fuori da tutti i view, sempre nel DOM) -->
-    <!-- NEW PROJECT MODAL -->
-    <div id="newProjectModal" class="modal">
-      <div class="modal-content">
-        <h2 style="margin-bottom: 24px">Nuovo Progetto</h2>
-
-        <input
-          type="text"
-          id="projectName"
-          class="form-input"
-          placeholder="Nome progetto (es. Scalata Febbraio)"
-        />
-        <input
-          type="number"
-          id="projectBankroll"
-          class="form-input"
-          placeholder="Bankroll iniziale (€)"
-        />
-        <input
-          type="number"
-          id="projectEvents"
-          class="form-input"
-          placeholder="Numero eventi totali"
-        />
-        <input
-          type="number"
-          id="projectTarget"
-          class="form-input"
-          placeholder="Profitto target (€)"
-        />
-
-        <div style="display: flex; gap: 12px">
-          <button
-            onclick="closeNewProjectModal()"
-            class="btn btn-secondary"
-            style="flex: 1"
-          >
-            Annulla
-          </button>
-          <button onclick="createNewProject()" class="btn" style="flex: 1">
-            Crea Progetto
-          </button>
-        </div>
-      </div>
-    </div>
-
-  </body>
-</html
->
