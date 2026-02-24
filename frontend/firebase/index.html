@@ -2531,4 +2531,24 @@
       }
 
       // ============================================
+      // ============================================
       // PWA — Registrazione Service Worker
+      // ============================================
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", async () => {
+          try {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            for (const reg of regs) {
+              const swUrl = reg.active?.scriptURL || "";
+              await reg.update();
+            }
+            const reg = await navigator.serviceWorker.register("/service-worker.js");
+            console.log("[PWA] Service Worker registrato ✅", reg.scope);
+          } catch (err) {
+            console.warn("[PWA] Registrazione SW fallita:", err);
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
