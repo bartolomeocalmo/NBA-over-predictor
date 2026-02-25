@@ -186,6 +186,59 @@ def stripe_customer_portal():
         return jsonify({"error": str(e)}), 500
 
 
+@payments_bp.route("/stripe/cancel-subscription", methods=["POST"])
+def stripe_cancel_subscription():
+    if not STRIPE_ENABLED:
+        return jsonify({"error": "Stripe non configurato"}), 500
+
+    data = request.get_json()
+    uid  = data.get("uid")
+    if not uid:
+        return jsonify({"error": "uid mancante"}), 400
+
+    try:
+        db          = get_admin_db()
+        snap        = db.collection("users").document(uid).get()
+        user_data   = snap.to_dict() or {}
+        customer_id = user_data.get("stripe_customer_id")
+
+        # Fallback: cerca per email
+        if not customer_id:
+            email = user_data.get("email", "")
+            if not email:
+                try:
+                    import firebase_admin.auth as fb_auth
+                    user_record = fb_auth.get_user(uid)
+                    email = user_record.email or ""
+                except Exception:
+                    pass
+            if email:
+                customers = stripe.Customer.list(email=email, limit=1)
+                if customers.data:
+                    customer_id = customers.data[0].id
+                    db.collection("users").document(uid).set(
+                        {"stripe_customer_id": customer_id, "email": email}, merge=True
+                    )
+
+        if not customer_id:
+            return jsonify({"error": "Nessun abbonamento Stripe trovato"}), 404
+
+        # Trova la subscription attiva e cancellala a fine periodo
+        subscriptions = stripe.Subscription.list(customer=customer_id, status="active", limit=1)
+        if not subscriptions.data:
+            return jsonify({"error": "Nessuna sottoscrizione attiva trovata"}), 404
+
+        sub = subscriptions.data[0]
+        stripe.Subscription.modify(sub.id, cancel_at_period_end=True)
+        set_user_free(uid)
+        print(f"[Stripe] ⬇️ Cancellazione pianificata uid={uid} sub={sub.id}")
+        return jsonify({"success": True})
+
+    except Exception as e:
+        print(f"[Stripe cancel] Errore: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 # ============================================================
 # PAYPAL SUBSCRIPTIONS
 # Variabili Railway: PAYPAL_CLIENT_ID, PAYPAL_SECRET,

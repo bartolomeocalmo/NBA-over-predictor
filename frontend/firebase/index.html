@@ -818,23 +818,12 @@
           </div>
           <div class="pov-section" id="povSubSection" style="display:none;">
             <div class="pov-section-label">Abbonamento</div>
-            <div id="povPaypalSub" style="display:none;">
-              <div class="pov-sub-row">
-                <div>
-                  <div class="pov-sub-name">PayPal · €4,90/mese</div>
-                  <div class="pov-sub-status">🟢 Attivo — rinnovo automatico mensile</div>
-                </div>
-                <button onclick="handleCancelSubscription()" id="povCancelBtn" class="pov-cancel-btn">Disdici</button>
+            <div class="pov-sub-row">
+              <div>
+                <div class="pov-sub-name" id="povSubName">Piano Premium · €4,90/mese</div>
+                <div class="pov-sub-status">🟢 Attivo — rinnovo automatico mensile</div>
               </div>
-            </div>
-            <div id="povStripeSub" style="display:none;">
-              <div class="pov-sub-row">
-                <div>
-                  <div class="pov-sub-name">Carta di credito · €4,90/mese</div>
-                  <div class="pov-sub-status">🟢 Attivo — rinnovo automatico mensile</div>
-                </div>
-                <button onclick="manageStripeSubscription()" class="pov-manage-btn">Gestisci</button>
-              </div>
+              <button onclick="handleCancelSubscription()" id="povCancelBtn" class="pov-cancel-btn">Disdici</button>
             </div>
           </div>
           <div class="pov-section">
@@ -2569,12 +2558,11 @@
           const subId = data.paypal_subscription_id;
           if (isPremium) {
             subSection.style.display = "block";
-            if (subId) {
-              document.getElementById("povPaypalSub").style.display = "block";
-              document.getElementById("povStripeSub").style.display = "none";
-            } else {
-              document.getElementById("povPaypalSub").style.display = "none";
-              document.getElementById("povStripeSub").style.display = "block";
+            const subNameEl = document.getElementById("povSubName");
+            if (subNameEl) {
+              subNameEl.innerText = subId
+                ? "PayPal · €4,90/mese"
+                : "Carta di credito · €4,90/mese";
             }
           } else {
             subSection.style.display = "none";
@@ -2583,18 +2571,24 @@
       }
       function closeProfilePage() { document.getElementById("profilePageOverlay").classList.remove("active"); document.body.style.overflow = ""; }
 
-            async function handleCancelSubscription() {
+      async function handleCancelSubscription() {
         if (!currentUser) return;
         if (!confirm("Sei sicuro di voler disdire il piano Premium?\nIl tuo account tornerà al piano Free.")) return;
         const btn = document.getElementById("povCancelBtn");
         if (btn) { btn.disabled = true; btn.innerText = "⏳..."; }
         try {
           const snap = await db.collection("users").doc(currentUser.uid).get();
-          const subId = snap.data()?.paypal_subscription_id;
-          if (!subId) { alert("Nessun abbonamento PayPal trovato."); if (btn) { btn.disabled = false; btn.innerText = "Disdici"; } return; }
-          const res = await fetch("/paypal/cancel-subscription", {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ uid: currentUser.uid, subscription_id: subId }),
+          const paypalSubId = snap.data()?.paypal_subscription_id;
+
+          const endpoint = paypalSubId ? "/paypal/cancel-subscription" : "/stripe/cancel-subscription";
+          const body = paypalSubId
+            ? { uid: currentUser.uid, subscription_id: paypalSubId }
+            : { uid: currentUser.uid };
+
+          const res = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
           });
           const data = await res.json();
           if (data.success) {
@@ -2613,17 +2607,7 @@
         }
       }
 
-      async function manageStripeSubscription() {
-        try {
-          const res = await fetch("/stripe/customer-portal", {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ uid: currentUser.uid }),
-          });
-          const data = await res.json();
-          if (data.url) window.location.href = data.url;
-          else alert("Errore: " + (data.error || "Riprova."));
-        } catch(e) { alert("Errore: " + e.message); }
-      }
+
 
       // ============================================
       // ============================================
