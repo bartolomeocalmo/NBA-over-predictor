@@ -106,10 +106,20 @@ def stripe_webhook():
 
     event_type = event["type"]
     if event_type == "checkout.session.completed":
-        uid = event["data"]["object"].get("metadata", {}).get("uid")
+        session_obj = event["data"]["object"]
+        uid         = session_obj.get("metadata", {}).get("uid")
+        customer_id = session_obj.get("customer")
+        email       = session_obj.get("customer_email", "")
         if uid:
             set_user_premium(uid)
-            print(f"[Stripe] ✅ Premium attivato uid={uid}")
+            # Salva customer_id per il portale di gestione abbonamento
+            if customer_id:
+                db = get_admin_db()
+                db.collection("users").document(uid).set(
+                    {"stripe_customer_id": customer_id, "email": email},
+                    merge=True
+                )
+            print(f"[Stripe] ✅ Premium attivato uid={uid} customer={customer_id}")
     elif event_type == "customer.subscription.deleted":
         customer_id = event["data"]["object"].get("customer")
         if customer_id:
@@ -143,18 +153,27 @@ def stripe_customer_portal():
 
         # Se non abbiamo il customer_id salvato, cercalo su Stripe per email
         if not customer_id:
+            # Cerca per email dell'utente su Stripe
             email = user_data.get("email", "")
+            if not email:
+                # Prova a recuperare l'email da Firebase Auth
+                try:
+                    import firebase_admin.auth as fb_auth
+                    user_record = fb_auth.get_user(uid)
+                    email = user_record.email or ""
+                except Exception:
+                    pass
             if email:
-                customers = stripe.Customer.list(email=email, limit=1)
+                customers = stripe.Customer.list(email=email, limit=5)
                 if customers.data:
                     customer_id = customers.data[0].id
-                    # Salviamolo per le prossime volte
                     db.collection("users").document(uid).set(
-                        {"stripe_customer_id": customer_id}, merge=True
+                        {"stripe_customer_id": customer_id, "email": email}, merge=True
                     )
+                    print(f"[Stripe portal] customer_id trovato per email={email}: {customer_id}")
 
         if not customer_id:
-            return jsonify({"error": "Nessun abbonamento Stripe trovato per questo account."}), 404
+            return jsonify({"error": "Nessun abbonamento Stripe trovato. Hai sottoscritto con PayPal?"}), 404
 
         session = stripe.billing_portal.Session.create(
             customer=customer_id,
