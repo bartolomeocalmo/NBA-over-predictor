@@ -2700,10 +2700,19 @@
       let dailyPickData = null;
 
       async function loadDailyPick() {
-        if (userPlan !== "premium" || !currentUser) return;
+        console.log("[dailyPick] chiamata — userPlan:", userPlan, "currentUser:", currentUser?.uid);
+        if (userPlan !== "premium" || !currentUser) {
+          console.log("[dailyPick] BLOCCATA: userPlan=" + userPlan + " currentUser=" + currentUser?.uid);
+          return;
+        }
         try {
+          console.log("[dailyPick] fetching daily_pick/today...");
           const snap = await db.collection("daily_pick").doc("today").get();
-          if (!snap.exists) return;
+          console.log("[dailyPick] snap.exists:", snap.exists, "data:", snap.data());
+          if (!snap.exists) {
+            console.log("[dailyPick] documento 'today' non trovato in Firestore");
+            return;
+          }
 
           const d = snap.data();
           dailyPickData = d;
