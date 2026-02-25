@@ -334,7 +334,6 @@
         </div>
       </div>
 
-    </div>
 
       <!-- ── FOOTER ───────────────────────────────────── -->
       <footer class="ld-footer">
@@ -353,6 +352,8 @@
           </div>
         </div>
       </footer>
+
+    </div>
 
     <!-- DASHBOARD VIEW -->
     <div id="dashboardView" class="view">
@@ -2753,7 +2754,7 @@
             .where("status", "==", "active").get();
 
           if (snap.empty) {
-            list.innerHTML = '<div style="color:var(--text-muted); font-size:14px;">Nessun progetto attivo. <a href="#" onclick="openNewProjectModal(); document.getElementById("dpProjectModal").classList.remove("active");" style="color:#3b82f6;">Creane uno →</a></div>';
+            list.innerHTML = `<div style="color:var(--text-muted); font-size:14px;">Nessun progetto attivo. <a href="#" onclick="openNewProjectModal(); document.getElementById('dpProjectModal').classList.remove('active');" style="color:#3b82f6;">Creane uno →</a></div>`;
             return;
           }
 
