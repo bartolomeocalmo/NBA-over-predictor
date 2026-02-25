@@ -356,6 +356,67 @@
 
     <!-- DASHBOARD VIEW -->
     <div id="dashboardView" class="view">
+
+      <!-- ── GIOCATA DEL GIORNO (solo premium) ── -->
+      <div id="dailyPickSection" style="display:none; margin-bottom:24px;">
+        <div class="daily-pick-card">
+          <div class="dp-glow"></div>
+          <div class="dp-inner">
+
+            <!-- Header mockup style -->
+            <div class="dp-header-bar">
+              <div class="dp-dots">
+                <span style="background:#ef4444"></span>
+                <span style="background:#f59e0b"></span>
+                <span style="background:#10b981"></span>
+              </div>
+              <div class="dp-title-bar">⭐ Giocata del Giorno</div>
+              <div class="dp-date" id="dpDate">—</div>
+            </div>
+
+            <!-- Body -->
+            <div class="dp-body">
+              <div class="dp-rows">
+                <div class="dp-row"><span class="dp-lbl">Giocatore</span><span class="dp-val" id="dpPlayer">—</span></div>
+                <div class="dp-row"><span class="dp-lbl">Soglia Over</span><span class="dp-val" id="dpThreshold">—</span></div>
+                <div class="dp-row"><span class="dp-lbl">Quota</span><span class="dp-val" id="dpOdds">—</span></div>
+                <div class="dp-row"><span class="dp-lbl">Bookmaker</span><span class="dp-val" id="dpBookmaker">—</span></div>
+              </div>
+
+              <div class="dp-divider"></div>
+
+              <!-- Probabilità e verdict badge -->
+              <div class="dp-result-row">
+                <div class="dp-prob-block">
+                  <div class="dp-prob-num" id="dpProb">—</div>
+                  <div class="dp-prob-lbl">Probabilità stimata</div>
+                </div>
+                <div class="dp-verdict" id="dpVerdict">✅ Valore Positivo</div>
+              </div>
+
+              <!-- Barra probabilità -->
+              <div class="dp-bar-wrap"><div class="dp-bar" id="dpBar"></div></div>
+
+              <!-- Bottone aggiungi al progetto -->
+              <button class="dp-add-btn" id="dpAddBtn" onclick="openDailyPickProjectModal()">
+                📂 Aggiungi al mio Progetto
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal selezione progetto per giocata del giorno -->
+      <div class="modal-overlay" id="dpProjectModal">
+        <div class="modal" style="max-width:400px;">
+          <h2 style="margin-bottom:8px;">📂 Scegli il Progetto</h2>
+          <p style="font-size:14px; color:var(--text-muted); margin-bottom:20px;">Lo stake verrà calcolato in base al bankroll del progetto scelto.</p>
+          <div id="dpProjectList" style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;"></div>
+          <button onclick="document.getElementById('dpProjectModal').classList.remove('active')" class="btn btn-secondary" style="width:100%;">Annulla</button>
+        </div>
+      </div>
+
       <div class="dashboard-header">
         <div class="dashboard-title">I Miei Progetti</div>
         <button
@@ -1251,6 +1312,7 @@
           .forEach((v) => v.classList.remove("active"));
         document.getElementById("dashboardView").classList.add("active");
         loadUserProjects();
+        loadDailyPick();
       }
 
       function showPredictor() {
@@ -2580,6 +2642,25 @@
           const snap = await db.collection("users").doc(currentUser.uid).get();
           const paypalSubId = snap.data()?.paypal_subscription_id;
 
+          // Se non c'è nessun provider reale (account attivato manualmente),
+          // cancella direttamente su Firestore senza chiamare Stripe/PayPal
+          if (!paypalSubId) {
+            const stripeSnap = await db.collection("users").doc(currentUser.uid).get();
+            const hasStripe   = stripeSnap.data()?.stripe_customer_id;
+            if (!hasStripe) {
+              await db.collection("users").doc(currentUser.uid).set(
+                { plan: "free", plan_updated_at: firebase.firestore.FieldValue.serverTimestamp() },
+                { merge: true }
+              );
+              alert("✅ Piano riportato a Free.");
+              userPlan = "free";
+              updatePlanBadge();
+              closeProfilePage();
+              if (btn) { btn.disabled = false; btn.innerText = "Disdici"; }
+              return;
+            }
+          }
+
           const endpoint = paypalSubId ? "/paypal/cancel-subscription" : "/stripe/cancel-subscription";
           const body = paypalSubId
             ? { uid: currentUser.uid, subscription_id: paypalSubId }
@@ -2610,6 +2691,134 @@
 
 
       // ============================================
+
+      // ============================================
+      // GIOCATA DEL GIORNO
+      // ============================================
+
+      let dailyPickData = null;
+
+      async function loadDailyPick() {
+        if (userPlan !== "premium" || !currentUser) return;
+        try {
+          const snap = await db.collection("daily_pick").doc("today").get();
+          if (!snap.exists) return;
+
+          const d = snap.data();
+          dailyPickData = d;
+
+          // Popola card
+          const today = new Date().toLocaleDateString("it-IT", { day:"2-digit", month:"short", year:"numeric" });
+          document.getElementById("dpDate").innerText = d.date || today;
+          document.getElementById("dpPlayer").innerText = d.player || "—";
+          document.getElementById("dpThreshold").innerText = d.threshold ? d.threshold + " punti" : "—";
+          document.getElementById("dpOdds").innerText = d.odds ? d.odds.toFixed(2) : "—";
+          document.getElementById("dpBookmaker").innerText = d.bookmaker || "—";
+
+          // Probabilità e barra
+          const prob = d.probability || 0;
+          document.getElementById("dpProb").innerText = (prob * 100).toFixed(1) + "%";
+          const bar = document.getElementById("dpBar");
+          const pct = Math.min(prob * 100, 100);
+          const hue = Math.round(pct * 1.2);
+          bar.style.width = pct + "%";
+          bar.style.background = `hsl(${hue}, 80%, 50%)`;
+
+          // Verdict
+          const odds = d.odds || 1;
+          const impliedProb = 1 / odds;
+          const hasValue = prob > impliedProb;
+          const verdict = document.getElementById("dpVerdict");
+          verdict.innerText = hasValue ? "✅ Valore Positivo" : "⚠️ Analizza con cautela";
+          verdict.style.background = hasValue ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.15)";
+          verdict.style.color = hasValue ? "#10b981" : "#f59e0b";
+          verdict.style.border = hasValue ? "1px solid rgba(16,185,129,0.3)" : "1px solid rgba(245,158,11,0.3)";
+
+          document.getElementById("dailyPickSection").style.display = "block";
+        } catch(e) {
+          console.warn("[dailyPick]", e);
+        }
+      }
+
+      async function openDailyPickProjectModal() {
+        if (!dailyPickData || !currentUser) return;
+
+        // Carica lista progetti dell'utente
+        const list = document.getElementById("dpProjectList");
+        list.innerHTML = '<div style="color:var(--text-muted); font-size:14px;">⏳ Caricamento progetti...</div>';
+        document.getElementById("dpProjectModal").classList.add("active");
+
+        try {
+          const snap = await db.collection("users").doc(currentUser.uid).collection("projects")
+            .where("status", "==", "active").get();
+
+          if (snap.empty) {
+            list.innerHTML = '<div style="color:var(--text-muted); font-size:14px;">Nessun progetto attivo. <a href="#" onclick="openNewProjectModal(); document.getElementById("dpProjectModal").classList.remove("active");" style="color:#3b82f6;">Creane uno →</a></div>';
+            return;
+          }
+
+          list.innerHTML = "";
+          snap.forEach(doc => {
+            const p = { id: doc.id, ...doc.data() };
+            const bankroll = p.current_bankroll ?? p.initial_bankroll ?? 100;
+
+            // Calcola stake Kelly per questo progetto
+            const prob  = dailyPickData.probability || 0;
+            const odds  = dailyPickData.odds || 1;
+            const b     = odds - 1;
+            const q     = 1 - prob;
+            const kelly = Math.max(0, (b * prob - q) / b);
+            const stake = parseFloat((kelly * 0.5 * bankroll).toFixed(2)); // half-Kelly
+
+            const btn = document.createElement("button");
+            btn.className = "dp-project-btn";
+            btn.innerHTML = `
+              <div class="dp-proj-name">${p.name}</div>
+              <div class="dp-proj-detail">Bankroll: €${bankroll.toFixed(2)} · <strong>Stake: €${stake}</strong></div>
+            `;
+            btn.onclick = () => addDailyPickToProject(p, stake);
+            list.appendChild(btn);
+          });
+        } catch(e) {
+          list.innerHTML = '<div style="color:#f87171;">Errore nel caricamento: ' + e.message + '</div>';
+        }
+      }
+
+      async function addDailyPickToProject(project, stake) {
+        if (!dailyPickData || !currentUser) return;
+        document.getElementById("dpProjectModal").classList.remove("active");
+
+        const event = {
+          id: Date.now().toString(),
+          player:           dailyPickData.player,
+          threshold:        dailyPickData.threshold,
+          probability:      dailyPickData.probability,
+          odds:             dailyPickData.odds,
+          stake:            stake,
+          potential_profit: parseFloat((stake * (dailyPickData.odds - 1)).toFixed(2)),
+          result:           "pending",
+          date_added:       new Date(),
+          date_resolved:    null,
+          notes:            `Giocata del Giorno · ${dailyPickData.bookmaker} · Stake Kelly automatico`,
+        };
+
+        try {
+          await db.collection("users").doc(currentUser.uid)
+            .collection("projects").doc(project.id)
+            .update({
+              events: firebase.firestore.FieldValue.arrayUnion(event),
+              updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+
+          alert(`✅ Giocata aggiunta al progetto "${project.name}"!\nStake: €${stake}\nAprendo il progetto...`);
+
+          // Apri direttamente il progetto
+          await selectProject(project.id);
+        } catch(e) {
+          alert("Errore: " + e.message);
+        }
+      }
+
       // ============================================
       // PWA — Registrazione Service Worker
       // ============================================
